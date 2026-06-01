@@ -26,6 +26,34 @@ Sputnik is an offline Electron productivity app with a cozy retro mission-contro
 - Node.js
 - npm
 
+## Download and Run
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Yamabiko101/Sputnik.git
+cd Sputnik
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the app:
+
+```bash
+npm run dev
+```
+
+If you download the project as a ZIP from GitHub, unzip it, open a terminal in the extracted `Sputnik` folder, then run:
+
+```bash
+npm install
+npm run dev
+```
+
 ## Setup
 
 Install dependencies:
