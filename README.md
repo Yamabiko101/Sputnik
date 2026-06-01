@@ -1,32 +1,43 @@
 # Sputnik
 
-Sputnik is an offline Electron productivity app with a cozy retro mission-control feel. V1 helps you create missions, break them into tasks, complete focus sessions, write crew log notes, and see simple local progress stats.
+<p align="center">
+  <img src="docs/assets/sputnik-preview-v1.gif" alt="Sputnik V1 mission-control preview" width="760">
+</p>
 
-## Features
+<p align="center">
+  <strong>Offline mission-control productivity for planning, focus, and local progress tracking.</strong>
+</p>
 
-- Dashboard with active mission, focus, session, and companion status.
-- Mission creation with task tracking and progress.
-- Focus timer connected to a selected mission and optional task.
-- Crew Log notes, optionally attached to a mission.
-- Local stats for completed sessions and focus minutes.
-- Local SQLite persistence through Electron main process services.
-- Sputnik Pro simulation toggle for the V1 demo flow.
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-v1-C83A32">
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Electron-F4B95E">
+  <img alt="Storage" src="https://img.shields.io/badge/storage-SQLite-8BAE66">
+  <img alt="Mode" src="https://img.shields.io/badge/mode-offline-29231F">
+</p>
 
-## Tech Stack
+Sputnik is a cozy retro desktop app for turning work into missions. V1 lets you create missions, break them into tasks, complete focus sessions, write crew log notes, and see simple local stats without depending on cloud services.
 
-- Electron
-- electron-vite
-- React
-- Vite
-- better-sqlite3
-- lucide-react
+## V1 At A Glance
 
-## Requirements
+<p align="center">
+  <img src="docs/assets/sputnik-flow-v1.gif" alt="Sputnik V1 flow animation" width="720">
+</p>
 
-- Node.js
-- npm
+```txt
+Mission -> Tasks -> Focus Session -> Progress -> Crew Log
+```
 
-## Download and Run
+| Area | V1 Status |
+| --- | --- |
+| Missions | Create missions, view progress, track focus minutes |
+| Tasks | Add tasks, complete tasks, connect tasks to focus |
+| Focus | Run a mission-aware timer and save completed sessions |
+| Crew Log | Save local notes for mission context |
+| Stats | Show simple local totals and daily focus activity |
+| Companion | Laika mood updates after focus progress |
+| Pro | Local simulation only, no real payments |
+
+## Download And Run
 
 Clone the repository:
 
@@ -41,71 +52,57 @@ Install dependencies:
 npm install
 ```
 
-Run the app:
+Run the desktop app:
 
 ```bash
 npm run dev
 ```
 
-If you download the project as a ZIP from GitHub, unzip it, open a terminal in the extracted `Sputnik` folder, then run:
+If you downloaded a ZIP from GitHub, unzip it, open a terminal inside the extracted `Sputnik` folder, then run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Setup
+## Requirements
 
-Install dependencies:
+- Node.js
+- npm
 
-```bash
-npm install
-```
+The install step rebuilds `better-sqlite3` for Electron.
 
-The install step runs `electron-rebuild` for `better-sqlite3`.
+## Commands
 
-## Development
+| Command | Purpose |
+| --- | --- |
+| `npm install` | Install dependencies and rebuild native modules |
+| `npm run dev` | Start the Electron app in development mode |
+| `npm run build` | Create a production build |
+| `npm run preview` | Preview the built Electron app |
+| `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
-Run the app in development mode:
+## Version Plan
 
-```bash
-npm run dev
-```
+Sputnik is organized so each version can grow without losing the offline-first desktop core.
 
-This starts the Vite renderer dev server and launches the Electron app.
+| Version | Theme | Planned Direction |
+| --- | --- | --- |
+| V1 | Orbital Core | Missions, tasks, focus, notes, stats, local SQLite |
+| V2 | Navigation | Better planning views, richer filters, smoother mission workflows |
+| V3 | Telemetry | Deeper stats, streaks, focus history, richer companion feedback |
+| V4 | Docking Bay | Packaging, installer polish, export/import, backup workflows |
 
-## Build
+## V1 Smoke Flow
 
-Create a production build:
-
-```bash
-npm run build
-```
-
-Preview the built app:
-
-```bash
-npm run preview
-```
-
-## QA
-
-Current V1 verification commands:
-
-```bash
-npm run build
-```
-
-There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.
-
-Manual V1 smoke flow:
+Use this flow after running the app:
 
 1. Open the dashboard.
 2. Create a mission.
 3. Add tasks to the mission.
-4. Select the mission and a task in Focus.
+4. Select a mission and task in Focus.
 5. Complete a focus session.
-6. Confirm focus minutes and task progress update.
+6. Confirm focus minutes and progress update.
 7. Write a Crew Log note.
 
 ## Architecture
@@ -120,11 +117,37 @@ SQLite and Electron APIs live in the main process. The renderer uses the preload
 
 ## Local Data
 
-The app stores SQLite data under Electron's `userData` directory in a `sputnik/sputnik.sqlite` database. Generated database files, `node_modules`, and build output are ignored by git.
+Sputnik stores data under Electron's `userData` directory in a local `sputnik/sputnik.sqlite` database.
+
+Ignored local files include:
+
+- `node_modules/`
+- `out/`
+- `dist/`
+- SQLite database files
+
+## Tech Stack
+
+| Layer | Tools |
+| --- | --- |
+| Desktop shell | Electron |
+| Build tooling | electron-vite, Vite |
+| Interface | React, lucide-react |
+| Storage | SQLite with better-sqlite3 |
+
+## QA
+
+Current V1 verification:
+
+```bash
+npm run build
+```
+
+There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.
 
 ## V1 Notes
 
-- Sputnik is currently a local/offline desktop app.
-- The useful minimum window size is about `900x620`.
-- The Pro flow is a local simulation only; there are no real payments in V1.
-- Automated tests and lint/typecheck scripts are not configured yet.
+- Sputnik is currently local and offline.
+- Recommended minimum useful window size is around `900x620`.
+- The Pro flow is only a local simulation in V1.
+- Future versions should add automated checks before release.
