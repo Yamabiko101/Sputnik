@@ -82,6 +82,40 @@ The install step rebuilds `better-sqlite3` for Electron.
 | `npm run preview` | Preview the built Electron app |
 | `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshot-dashboard-v1.jpg" alt="Sputnik dashboard screen" width="780">
+</p>
+
+<p align="center">
+  <strong>Dashboard</strong>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshot-missions-v1.jpg" alt="Sputnik missions screen" width="780">
+</p>
+
+<p align="center">
+  <strong>Missions</strong>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshot-focus-v1.jpg" alt="Sputnik focus screen" width="780">
+</p>
+
+<p align="center">
+  <strong>Focus</strong>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshot-crew-log-v1.jpg" alt="Sputnik crew log screen" width="780">
+</p>
+
+<p align="center">
+  <strong>Crew Log</strong>
+</p>
+
 ## Version Plan
 
 Sputnik is organized so each version can grow without losing the offline-first desktop core.
