@@ -1,41 +1,68 @@
 # Sputnik
 
 <p align="center">
-  <img src="docs/assets/sputnik-preview-v1.gif" alt="Sputnik V1 mission-control preview" width="760">
+  <img src="docs/assets/sputnik-logo.svg" alt="Sputnik Mission OS logo" width="720">
 </p>
 
 <p align="center">
-  <strong>Offline mission-control productivity for planning, focus, and local progress tracking.</strong>
+  <strong>A cozy offline mission-control desktop app for planning, focus, and local progress tracking.</strong>
 </p>
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-v1-C83A32">
-  <img alt="Platform" src="https://img.shields.io/badge/platform-Electron-F4B95E">
+  <img alt="Desktop" src="https://img.shields.io/badge/desktop-Electron-F4B95E">
   <img alt="Storage" src="https://img.shields.io/badge/storage-SQLite-8BAE66">
-  <img alt="Mode" src="https://img.shields.io/badge/mode-offline-29231F">
+  <img alt="Offline" src="https://img.shields.io/badge/offline-first-29231F">
 </p>
 
-Sputnik is a cozy retro desktop app for turning work into missions. V1 lets you create missions, break them into tasks, complete focus sessions, write crew log notes, and see simple local stats without depending on cloud services.
+Sputnik turns work into missions. V1 gives you a calm desktop cockpit for creating missions, breaking them into tasks, completing focus sessions, writing crew log notes, and watching progress stay local on your machine.
 
-## V1 At A Glance
+## See It
 
 <p align="center">
-  <img src="docs/assets/sputnik-flow-v1.gif" alt="Sputnik V1 flow animation" width="720">
+  <img src="docs/assets/screenshot-dashboard-v1.jpg" alt="Sputnik dashboard screen" width="780">
 </p>
 
-```txt
-Mission -> Tasks -> Focus Session -> Progress -> Crew Log
-```
+<p align="center">
+  <strong>Dashboard</strong> · mission status, focus totals, daily sessions, and companion mood
+</p>
 
-| Area | V1 Status |
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshot-missions-v1.jpg" alt="Sputnik missions screen">
+      <p align="center"><strong>Missions</strong></p>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/screenshot-focus-v1.jpg" alt="Sputnik focus screen">
+      <p align="center"><strong>Focus</strong></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshot-crew-log-v1.jpg" alt="Sputnik crew log screen">
+      <p align="center"><strong>Crew Log</strong></p>
+    </td>
+    <td width="50%">
+      <br>
+      <h3>V1 Feeling</h3>
+      <p>Retro mission control, warm colors, local data, and a simple flow from plan to focus to notes.</p>
+      <p><strong>Mission -> Tasks -> Focus -> Progress -> Crew Log</strong></p>
+    </td>
+  </tr>
+</table>
+
+## V1 Highlights
+
+| Area | What It Does |
 | --- | --- |
-| Missions | Create missions, view progress, track focus minutes |
-| Tasks | Add tasks, complete tasks, connect tasks to focus |
+| Missions | Create missions, view progress, and track focus minutes |
+| Tasks | Add tasks, complete tasks, and connect tasks to focus sessions |
 | Focus | Run a mission-aware timer and save completed sessions |
-| Crew Log | Save local notes for mission context |
-| Stats | Show simple local totals and daily focus activity |
-| Companion | Laika mood updates after focus progress |
-| Pro | Local simulation only, no real payments |
+| Crew Log | Keep local notes tied to mission context |
+| Stats | See simple local totals and daily focus activity |
+| Companion | Laika reacts to progress after focus sessions |
+| Pro | Local simulation only, with no real payments in V1 |
 
 ## Download And Run
 
@@ -65,13 +92,6 @@ npm install
 npm run dev
 ```
 
-## Requirements
-
-- Node.js
-- npm
-
-The install step rebuilds `better-sqlite3` for Electron.
-
 ## Commands
 
 | Command | Purpose |
@@ -82,45 +102,11 @@ The install step rebuilds `better-sqlite3` for Electron.
 | `npm run preview` | Preview the built Electron app |
 | `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
-## Screenshots
+## Version Roadmap
 
-<p align="center">
-  <img src="docs/assets/screenshot-dashboard-v1.jpg" alt="Sputnik dashboard screen" width="780">
-</p>
+Sputnik is built as a versioned desktop project so each release can grow without losing the offline-first core.
 
-<p align="center">
-  <strong>Dashboard</strong>
-</p>
-
-<p align="center">
-  <img src="docs/assets/screenshot-missions-v1.jpg" alt="Sputnik missions screen" width="780">
-</p>
-
-<p align="center">
-  <strong>Missions</strong>
-</p>
-
-<p align="center">
-  <img src="docs/assets/screenshot-focus-v1.jpg" alt="Sputnik focus screen" width="780">
-</p>
-
-<p align="center">
-  <strong>Focus</strong>
-</p>
-
-<p align="center">
-  <img src="docs/assets/screenshot-crew-log-v1.jpg" alt="Sputnik crew log screen" width="780">
-</p>
-
-<p align="center">
-  <strong>Crew Log</strong>
-</p>
-
-## Version Plan
-
-Sputnik is organized so each version can grow without losing the offline-first desktop core.
-
-| Version | Theme | Planned Direction |
+| Version | Name | Direction |
 | --- | --- | --- |
 | V1 | Orbital Core | Missions, tasks, focus, notes, stats, local SQLite |
 | V2 | Navigation | Better planning views, richer filters, smoother mission workflows |
