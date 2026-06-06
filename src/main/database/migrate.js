@@ -1,10 +1,20 @@
 import { getDb } from './connection.js'
 import initialSchemaSql from './migrations/001_v1_orbital_core.sql?raw'
+import missionOsSql from './migrations/002_v2_mission_os.sql?raw'
+import laikaProductSql from './migrations/003_v3_laika_product.sql?raw'
 
 const migrations = [
   {
     version: '001_v1_orbital_core.sql',
     sql: initialSchemaSql
+  },
+  {
+    version: '002_v2_mission_os.sql',
+    sql: missionOsSql
+  },
+  {
+    version: '003_v3_laika_product.sql',
+    sql: laikaProductSql
   }
 ]
 

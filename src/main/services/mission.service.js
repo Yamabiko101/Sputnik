@@ -5,7 +5,12 @@ import {
   listMissions,
   updateMission
 } from '../database/repositories/missions.repository.js'
+import { createActivityEvent } from '../database/repositories/activity.repository.js'
+import { getDb } from '../database/connection.js'
+import { incrementDailySnapshot } from '../database/repositories/snapshots.repository.js'
 import { listTasksByMission } from '../database/repositories/tasks.repository.js'
+import { evaluateAchievements } from './achievement.service.js'
+import { completeMissionWorkflow } from '../workflows/completeMission.workflow.js'
 
 function withProgress(mission) {
   if (!mission) return null
@@ -33,11 +38,28 @@ export function getMissionById(id) {
 
 export function createMissionService(data) {
   requireTitle(data?.title)
-  return withProgress(createMission({ ...data, title: data.title.trim() }))
+  const db = getDb()
+  const create = db.transaction(() => {
+    const mission = createMission({ ...data, title: data.title.trim() })
+    incrementDailySnapshot('created_missions')
+    createActivityEvent({
+      eventType: 'mission_created',
+      missionId: mission.id,
+      title: `Created mission: ${mission.title}`,
+      details: { priority: mission.priority, dueDate: mission.due_date }
+    })
+    evaluateAchievements()
+    return mission
+  })
+
+  return withProgress(create())
 }
 
 export function updateMissionService(id, data) {
   if (data?.title !== undefined) requireTitle(data.title)
+  if (data?.status === 'completed') {
+    return withProgress(completeMissionWorkflow(id))
+  }
   return withProgress(updateMission(id, data))
 }
 

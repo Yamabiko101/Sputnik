@@ -25,3 +25,7 @@ export function activateProPlan() {
 
   return getDb().prepare('SELECT * FROM user_profile WHERE id = 1').get()
 }
+
+export function getUserProfile() {
+  return getDb().prepare('SELECT * FROM user_profile WHERE id = 1').get()
+}

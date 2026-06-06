@@ -7,6 +7,33 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-color: rgba(169, 154, 131, 0.32) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(169, 154, 131, 0.34);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 185, 94, 0.46);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 body {
@@ -180,6 +207,11 @@ p {
   background: #29231f;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .primaryButton,
 .secondaryButton {
   padding: 0 14px;
@@ -210,10 +242,18 @@ p {
   margin-bottom: 18px;
 }
 
+.snapshotGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .metric,
 .panel,
 .missionCard,
-.logEntry {
+.logEntry,
+.achievementCard,
+.skinCard {
   border: 1px solid #3a302a;
   background: rgba(29, 25, 22, 0.94);
   border-radius: 8px;
@@ -240,6 +280,19 @@ p {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 0.55fr);
   gap: 18px;
+  align-items: start;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.55fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.dashboardColumn {
+  display: grid;
+  gap: 18px;
 }
 
 .twoColumn.wideLeft {
@@ -259,6 +312,14 @@ p {
 .cardGrid {
   display: grid;
   gap: 12px;
+}
+
+.taskList {
+  margin-top: 16px;
+}
+
+.taskList:empty {
+  display: none;
 }
 
 .cardGrid {
@@ -400,24 +461,32 @@ textarea {
   min-height: 280px;
 }
 
-.laika {
+.pixelSprite {
+  display: block;
   margin-bottom: 18px;
-  color: #f4b95e;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 70px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
-.laika.running {
-  color: #8bae66;
+.petSprite {
+  filter: drop-shadow(0 10px 0 rgba(18, 16, 14, 0.42));
 }
 
-.laika.celebrating,
-.laika.completed {
-  color: #f2d8a7;
+.petSprite-focus {
+  filter:
+    drop-shadow(0 10px 0 rgba(18, 16, 14, 0.42))
+    drop-shadow(0 0 16px rgba(139, 174, 102, 0.16));
 }
 
-.largeCompanion .laika {
-  font-size: 120px;
+.petSprite-celebrating,
+.petSprite-happy {
+  filter:
+    drop-shadow(0 10px 0 rgba(18, 16, 14, 0.42))
+    drop-shadow(0 0 18px rgba(244, 185, 94, 0.18));
+}
+
+.companionProgress {
+  width: min(100%, 360px);
 }
 
 .emptyState {
@@ -435,6 +504,109 @@ textarea {
   padding: 16px;
 }
 
+.achievementGrid,
+.skinGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.achievementCard {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.achievementCard.unlocked {
+  border-color: #8bae66;
+  background: rgba(139, 174, 102, 0.1);
+}
+
+.achievementCard h3 {
+  margin: 6px 0;
+}
+
+.skinCard {
+  display: grid;
+  gap: 8px;
+  color: #f6e7c8;
+  padding: 14px;
+  text-align: left;
+}
+
+.skinCard.selected {
+  border-color: #f4b95e;
+}
+
+.skinSwatch {
+  display: block;
+  width: 38px;
+  height: 22px;
+  border: 1px solid #3a302a;
+  background: #f4b95e;
+}
+
+.skinSwatch.classic {
+  background: linear-gradient(90deg, #f4b95e, #c83a32);
+}
+
+.skinSwatch.cosmonaut {
+  background: linear-gradient(90deg, #8bae66, #f2d8a7);
+}
+
+.skinSwatch.aurora {
+  background: linear-gradient(90deg, #8bae66, #f2d8a7, #c83a32);
+}
+
+.skinSwatch.gold {
+  background: linear-gradient(90deg, #f4b95e, #f2d8a7);
+}
+
+.activityList,
+.weeklyBars {
+  display: grid;
+  gap: 10px;
+}
+
+.activityItem {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid #3a302a;
+  background: #29231f;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.activityItem strong,
+.activityItem small {
+  display: block;
+}
+
+.activityDot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #f4b95e;
+  box-shadow: 0 0 0 4px rgba(244, 185, 94, 0.12);
+}
+
+.weeklyBar {
+  display: grid;
+  grid-template-columns: 94px 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  color: #a99a83;
+}
+
+.weeklyBar strong {
+  color: #f2d8a7;
+  text-align: right;
+}
+
 pre {
   white-space: pre-wrap;
   color: #f4b95e;
@@ -446,6 +618,8 @@ pre {
   }
 
   .metricGrid,
+  .snapshotGrid,
+  .dashboardGrid,
   .twoColumn,
   .twoColumn.wideLeft,
   .focusGrid,
@@ -456,5 +630,13 @@ pre {
 
   .screenHeader {
     display: grid;
+  }
+
+  .weeklyBar {
+    grid-template-columns: 1fr;
+  }
+
+  .weeklyBar strong {
+    text-align: left;
   }
 }

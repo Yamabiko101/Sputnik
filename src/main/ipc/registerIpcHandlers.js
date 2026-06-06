@@ -27,11 +27,17 @@ import {
 import { getDashboardStats, getWeeklyStats } from '../services/stats.service.js'
 import { getCurrentPetService } from '../services/pet.service.js'
 import {
+  getPetSkinsService,
+  selectPetSkinService
+} from '../services/pet.service.js'
+import {
   activateProSimulationService,
+  getUserProfileService,
   getSettings,
   setSettingService
 } from '../services/settings.service.js'
 import { getAchievements } from '../services/achievement.service.js'
+import { getRecentActivity } from '../services/activity.service.js'
 
 function handle(channel, listener) {
   ipcMain.handle(channel, (_event, payload) => listener(payload))
@@ -61,9 +67,13 @@ export function registerIpcHandlers() {
 
   handle('stats:getDashboard', () => getDashboardStats())
   handle('stats:getWeekly', () => getWeeklyStats())
+  handle('activity:getRecent', (limit) => getRecentActivity(limit))
   handle('pets:getCurrent', () => getCurrentPetService())
+  handle('pets:getSkins', () => getPetSkinsService())
+  handle('pets:selectSkin', (id) => selectPetSkinService(id))
   handle('achievements:getAll', () => getAchievements())
   handle('settings:getAll', () => getSettings())
   handle('settings:set', ({ key, value }) => setSettingService(key, value))
+  handle('pro:getProfile', () => getUserProfileService())
   handle('pro:activateSimulation', () => activateProSimulationService())
 }

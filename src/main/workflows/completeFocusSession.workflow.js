@@ -1,8 +1,11 @@
 import { getDb } from '../database/connection.js'
+import { createActivityEvent } from '../database/repositories/activity.repository.js'
 import { completeFocusSession } from '../database/repositories/focus.repository.js'
 import { addMissionFocusMinutes } from '../database/repositories/missions.repository.js'
+import { incrementDailySnapshot } from '../database/repositories/snapshots.repository.js'
 import { addTaskFocusMinutes } from '../database/repositories/tasks.repository.js'
-import { setPetMood } from '../database/repositories/pets.repository.js'
+import { addPetXp } from '../database/repositories/pets.repository.js'
+import { evaluateAchievements } from '../services/achievement.service.js'
 
 export function completeFocusSessionWorkflow(data) {
   const db = getDb()
@@ -19,8 +22,26 @@ export function completeFocusSessionWorkflow(data) {
       addTaskFocusMinutes(session.task_id, minutes)
     }
 
-    const pet = setPetMood('celebrating')
-    return { session, pet }
+    incrementDailySnapshot('focus_minutes', minutes)
+    incrementDailySnapshot('completed_sessions')
+
+    createActivityEvent({
+      eventType: 'focus_completed',
+      missionId: session.mission_id,
+      taskId: session.task_id,
+      focusSessionId: session.id,
+      title: `Completed ${minutes} minute focus session`,
+      details: {
+        mode: session.mode,
+        plannedMinutes: session.planned_minutes,
+        actualMinutes: minutes
+      }
+    })
+
+    const pet = addPetXp(Math.max(10, minutes * 2), 'celebrating')
+    const unlockedAchievements = evaluateAchievements()
+
+    return { session, pet, unlockedAchievements }
   })
 
   return complete()

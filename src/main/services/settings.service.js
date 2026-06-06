@@ -1,4 +1,9 @@
-import { activateProPlan, listSettings, setSetting } from '../database/repositories/settings.repository.js'
+import {
+  getUserProfile,
+  listSettings,
+  setSetting
+} from '../database/repositories/settings.repository.js'
+import { activateProPlanWorkflow } from '../workflows/activateProPlan.workflow.js'
 
 export function getSettings() {
   return listSettings()
@@ -10,5 +15,9 @@ export function setSettingService(key, value) {
 }
 
 export function activateProSimulationService() {
-  return activateProPlan()
+  return activateProPlanWorkflow()
+}
+
+export function getUserProfileService() {
+  return getUserProfile()
 }

@@ -32,8 +32,13 @@ contextBridge.exposeInMainWorld('sputnik', {
     getDashboard: () => invoke('stats:getDashboard'),
     getWeekly: () => invoke('stats:getWeekly')
   },
+  activity: {
+    getRecent: (limit) => invoke('activity:getRecent', limit)
+  },
   pets: {
-    getCurrent: () => invoke('pets:getCurrent')
+    getCurrent: () => invoke('pets:getCurrent'),
+    getSkins: () => invoke('pets:getSkins'),
+    selectSkin: (id) => invoke('pets:selectSkin', id)
   },
   achievements: {
     getAll: () => invoke('achievements:getAll')
@@ -43,6 +48,7 @@ contextBridge.exposeInMainWorld('sputnik', {
     set: (key, value) => invoke('settings:set', { key, value })
   },
   pro: {
+    getProfile: () => invoke('pro:getProfile'),
     activateSimulation: () => invoke('pro:activateSimulation')
   }
 })

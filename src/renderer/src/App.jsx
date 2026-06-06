@@ -12,10 +12,12 @@ import {
   Plus,
   RefreshCw,
   Settings,
-  TimerReset
+  TimerReset,
+  Trophy
 } from 'lucide-react'
 import { AppLayout } from './app/layout/AppLayout.jsx'
 import { EmptyState } from './shared/components/EmptyState.jsx'
+import { PetSprite } from './shared/components/pixel/PetSprite.jsx'
 
 const api = window.sputnik
 
@@ -25,6 +27,7 @@ const navItems = [
   { id: 'focus', label: 'Focus', icon: TimerReset },
   { id: 'notes', label: 'Crew Log', icon: NotebookText },
   { id: 'stats', label: 'Stats', icon: BarChart3 },
+  { id: 'achievements', label: 'Achievements', icon: Trophy },
   { id: 'companion', label: 'Companion', icon: PawPrint },
   { id: 'pro', label: 'Sputnik Pro', icon: Crown },
   { id: 'settings', label: 'Settings', icon: Settings }
@@ -35,24 +38,50 @@ export function App() {
   const [missions, setMissions] = useState([])
   const [notes, setNotes] = useState([])
   const [stats, setStats] = useState(null)
+  const [activity, setActivity] = useState([])
+  const [weeklyStats, setWeeklyStats] = useState([])
   const [pet, setPet] = useState(null)
+  const [skins, setSkins] = useState([])
+  const [achievements, setAchievements] = useState([])
+  const [profile, setProfile] = useState(null)
   const [settings, setSettings] = useState({})
   const [selectedMissionId, setSelectedMissionId] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState('')
   const [message, setMessage] = useState('')
 
   async function refresh() {
-    const [missionData, noteData, statData, petData, settingData] = await Promise.all([
+    const [
+      missionData,
+      noteData,
+      statData,
+      activityData,
+      weeklyData,
+      petData,
+      skinData,
+      achievementData,
+      profileData,
+      settingData
+    ] = await Promise.all([
       api.missions.getAll(),
       api.notes.getAll(),
       api.stats.getDashboard(),
+      api.activity.getRecent(10),
+      api.stats.getWeekly(),
       api.pets.getCurrent(),
+      api.pets.getSkins(),
+      api.achievements.getAll(),
+      api.pro.getProfile(),
       api.settings.getAll()
     ])
     setMissions(missionData)
     setNotes(noteData)
     setStats(statData)
+    setActivity(activityData)
+    setWeeklyStats(weeklyData)
     setPet(petData)
+    setSkins(skinData)
+    setAchievements(achievementData)
+    setProfile(profileData)
     setSettings(settingData)
 
     if (!selectedMissionId && missionData[0]) {
@@ -103,6 +132,7 @@ export function App() {
           stats={stats}
           pet={pet}
           missions={missions}
+          activity={activity}
           onStartFocus={() => setView('focus')}
           onNewMission={() => setView('missions')}
         />
@@ -121,6 +151,9 @@ export function App() {
           }
           onCreateTask={(data) => runAction(() => api.tasks.create(data), 'Task added.')}
           onCompleteTask={(id) => runAction(() => api.tasks.complete(id), 'Task completed.')}
+          onCompleteMission={(id) =>
+            runAction(() => api.missions.update(id, { status: 'completed' }), 'Mission completed.')
+          }
           onStartFocus={(missionId, taskId) => {
             setSelectedMissionId(String(missionId))
             setSelectedTaskId(taskId ? String(taskId) : '')
@@ -132,6 +165,7 @@ export function App() {
       {view === 'focus' && (
         <Focus
           missions={missions}
+          pet={pet}
           selectedMissionId={selectedMissionId}
           selectedTaskId={selectedTaskId}
           selectedMission={selectedMission}
@@ -156,10 +190,19 @@ export function App() {
         />
       )}
 
-      {view === 'stats' && <Stats stats={stats} missions={missions} />}
-      {view === 'companion' && <Companion pet={pet} />}
+      {view === 'stats' && <Stats stats={stats} missions={missions} weeklyStats={weeklyStats} />}
+      {view === 'achievements' && <Achievements achievements={achievements} />}
+      {view === 'companion' && (
+        <Companion
+          pet={pet}
+          skins={skins}
+          onSelectSkin={(id) => runAction(() => api.pets.selectSkin(id), 'Laika skin selected.')}
+        />
+      )}
       {view === 'pro' && (
         <ProSimulation
+          profile={profile}
+          skins={skins}
           onActivate={() => runAction(() => api.pro.activateSimulation(), 'Sputnik Pro simulation activated.')}
         />
       )}
@@ -168,7 +211,7 @@ export function App() {
   )
 }
 
-function Dashboard({ stats, pet, missions, onStartFocus, onNewMission }) {
+function Dashboard({ stats, pet, missions, activity, onStartFocus, onNewMission }) {
   return (
     <section className="screen">
       <div className="screenHeader">
@@ -191,27 +234,47 @@ function Dashboard({ stats, pet, missions, onStartFocus, onNewMission }) {
         <Metric label="Active missions" value={stats?.activeMissions ?? 0} />
         <Metric label="Focus minutes today" value={stats?.focusMinutesToday ?? 0} />
         <Metric label="Sessions today" value={stats?.completedSessionsToday ?? 0} />
-        <Metric label="Laika mood" value={pet?.mood ?? 'ready'} />
+        <Metric label="Current streak" value={`${stats?.currentStreak ?? 0}d`} />
       </div>
 
-      <div className="twoColumn">
-        <section className="panel">
-          <h2>Mission Queue</h2>
-          {missions.length === 0 ? (
-            <EmptyState title="No missions yet" body="Create your first mission to start the demo flow." />
-          ) : (
-            <div className="list">
-              {missions.slice(0, 4).map((mission) => (
-                <MissionRow key={mission.id} mission={mission} />
-              ))}
+      <div className="dashboardGrid">
+        <div className="dashboardColumn">
+          <section className="panel">
+            <h2>Mission Queue</h2>
+            {missions.length === 0 ? (
+              <EmptyState title="No missions yet" body="Create your first mission to start the demo flow." />
+            ) : (
+              <div className="list">
+                {missions.slice(0, 4).map((mission) => (
+                  <MissionRow key={mission.id} mission={mission} />
+                ))}
+              </div>
+            )}
+          </section>
+          <section className="panel">
+            <h2>Today Snapshot</h2>
+            <div className="snapshotGrid">
+              <Metric label="Tasks completed" value={stats?.completedTasksToday ?? 0} />
+              <Metric label="Missions created" value={stats?.createdMissionsToday ?? 0} />
+              <Metric label="Logs written" value={stats?.createdNotesToday ?? 0} />
             </div>
-          )}
-        </section>
-        <section className="panel companionPanel">
-          <div className="laika">▟◕ᴥ◕▙</div>
-          <h2>Laika is on standby.</h2>
-          <p>Complete a focus session and Laika will celebrate the progress.</p>
-        </section>
+          </section>
+        </div>
+        <div className="dashboardColumn">
+          <section className="panel">
+            <h2>Mission Timeline</h2>
+            {activity.length === 0 ? (
+              <EmptyState title="No activity yet" body="Create a mission or complete a focus session to light up the ledger." />
+            ) : (
+              <ActivityList events={activity} />
+            )}
+          </section>
+          <section className="panel companionPanel">
+            <PetSprite pet={pet} mood={pet?.mood === 'celebrating' ? 'celebrating' : 'idle'} size="dock" />
+            <h2>{pet?.name ?? 'Laika'} is {pet?.mood ?? 'ready'}.</h2>
+            <p>Level {pet?.level ?? 1} · {pet?.xp ?? 0} XP · {pet?.skin_name ?? 'Classic Laika'}</p>
+          </section>
+        </div>
       </div>
     </section>
   )
@@ -224,6 +287,7 @@ function Missions({
   onCreateMission,
   onCreateTask,
   onCompleteTask,
+  onCompleteMission,
   onStartFocus
 }) {
   const [missionTitle, setMissionTitle] = useState('')
@@ -302,7 +366,7 @@ function Missions({
                   <Plus size={18} /> Add Task
                 </button>
               </form>
-              <div className="list">
+              <div className="list taskList">
                 {activeMission.tasks.map((task) => (
                   <div className="taskRow" key={task.id}>
                     <button
@@ -325,6 +389,13 @@ function Missions({
               <button className="primaryButton fullWidth" onClick={() => onStartFocus(activeMission.id)}>
                 <Play size={18} /> Start Mission Focus
               </button>
+              <button
+                className="secondaryButton fullWidth"
+                disabled={activeMission.status === 'completed'}
+                onClick={() => onCompleteMission(activeMission.id)}
+              >
+                <Check size={18} /> Complete Mission
+              </button>
             </>
           )}
         </section>
@@ -335,6 +406,7 @@ function Missions({
 
 function Focus({
   missions,
+  pet,
   selectedMissionId,
   selectedTaskId,
   selectedMission,
@@ -365,6 +437,29 @@ function Focus({
       setStatus('completed')
     }
   }, [secondsLeft, status])
+
+  useEffect(() => {
+    function handleShortcut(event) {
+      if (event.target?.matches?.('input, select, textarea')) return
+
+      if (event.code === 'Space') {
+        event.preventDefault()
+        setStatus((current) => (current === 'running' ? 'paused' : 'running'))
+      }
+
+      if (event.key.toLowerCase() === 's') {
+        setStatus('running')
+      }
+
+      if (event.key.toLowerCase() === 'r') {
+        setStatus('ready')
+        setSecondsLeft(plannedMinutes * 60)
+      }
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [plannedMinutes])
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
@@ -434,9 +529,9 @@ function Focus({
         </section>
 
         <section className="panel companionPanel">
-          <div className={`laika ${status}`}>▟◕ᴥ◕▙</div>
+          <PetSprite pet={pet} mood={status} size="focus" />
           <h2>{status === 'running' ? 'Laika is focusing.' : 'Laika is ready.'}</h2>
-          <p>Status: {status}. Use this screen to save real focus minutes into the selected mission.</p>
+          <p>Status: {status}. Completion now grants XP and checks achievements.</p>
         </section>
       </div>
     </section>
@@ -491,56 +586,156 @@ function CrewLog({ notes, missions, onCreateNote }) {
   )
 }
 
-function Stats({ stats, missions }) {
+function Stats({ stats, missions, weeklyStats }) {
   return (
     <section className="screen">
       <div className="screenHeader">
         <div>
           <span className="stamp">ТЕЛЕМЕТРИЯ</span>
           <h1>Stats</h1>
-          <p>V1 telemetry is simple and based on completed focus sessions.</p>
+          <p>Mission OS telemetry is updated by workflows and daily snapshots.</p>
         </div>
       </div>
       <div className="metricGrid">
         <Metric label="Total focus minutes" value={stats?.totalFocusMinutes ?? 0} />
         <Metric label="Total sessions" value={stats?.totalFocusSessions ?? 0} />
         <Metric label="Missions created" value={missions.length} />
+        <Metric label="Current streak" value={`${stats?.currentStreak ?? 0}d`} />
+      </div>
+      <div className="twoColumn">
+        <section className="panel">
+          <h2>Weekly Focus</h2>
+          {weeklyStats.length === 0 ? (
+            <EmptyState title="No weekly telemetry yet" body="Complete a focus session to create the first daily snapshot." />
+          ) : (
+            <div className="weeklyBars">
+              {weeklyStats.map((item) => (
+                <div className="weeklyBar" key={item.day}>
+                  <span>{item.day}</span>
+                  <div className="progressBar">
+                    <span style={{ width: `${Math.min(100, (item.minutes / 120) * 100)}%` }} />
+                  </div>
+                  <strong>{item.minutes} min</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+        <section className="panel">
+          <h2>Recent Activity</h2>
+          {stats?.recentActivity?.length ? (
+            <ActivityList events={stats.recentActivity} />
+          ) : (
+            <EmptyState title="No activity yet" body="Mission OS events will appear here after user actions." />
+          )}
+        </section>
       </div>
     </section>
   )
 }
 
-function Companion({ pet }) {
+function Achievements({ achievements }) {
+  const unlockedCount = achievements.filter((achievement) => achievement.unlocked).length
+
+  return (
+    <section className="screen">
+      <div className="screenHeader">
+        <div>
+          <span className="stamp">НАГРАДЫ</span>
+          <h1>Achievements</h1>
+          <p>Unlocked by real mission, focus, task, log, and Pro simulation events.</p>
+        </div>
+        <Metric label="Unlocked" value={`${unlockedCount}/${achievements.length}`} />
+      </div>
+      <div className="achievementGrid">
+        {achievements.map((achievement) => {
+          const percent = Math.min(100, (achievement.progress / achievement.target) * 100)
+          return (
+            <article className={`achievementCard ${achievement.unlocked ? 'unlocked' : ''}`} key={achievement.id}>
+              <Trophy size={22} />
+              <div>
+                <span className="meta">{achievement.unlocked ? 'Unlocked' : 'In progress'}</span>
+                <h3>{achievement.title}</h3>
+                <p>{achievement.description}</p>
+                <div className="progressBar">
+                  <span style={{ width: `${percent}%` }} />
+                </div>
+                <small>{Math.min(achievement.progress, achievement.target)} / {achievement.target}</small>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function Companion({ pet, skins, onSelectSkin }) {
   return (
     <section className="screen">
       <div className="screenHeader">
         <div>
           <span className="stamp">ЛАЙКА</span>
           <h1>Companion</h1>
-          <p>V1 keeps Laika simple: ready, focus, and celebration states.</p>
+          <p>Laika grows with completed work and can wear unlocked mission-control skins.</p>
         </div>
       </div>
-      <section className="panel companionPanel largeCompanion">
-        <div className="laika celebrating">▟◕ᴥ◕▙</div>
-        <h2>{pet?.name ?? 'Laika'}</h2>
-        <p>Current mood: {pet?.mood ?? 'ready'}</p>
-      </section>
+      <div className="twoColumn">
+        <section className="panel companionPanel largeCompanion">
+          <PetSprite pet={pet} mood={pet?.mood === 'celebrating' ? 'celebrating' : 'happy'} size="stage" />
+          <h2>{pet?.name ?? 'Laika'}</h2>
+          <p>Level {pet?.level ?? 1} · {pet?.xp ?? 0} XP · mood: {pet?.mood ?? 'ready'}</p>
+          <div className="progressBar companionProgress">
+            <span style={{ width: `${pet?.progress_to_next_level ?? 0}%` }} />
+          </div>
+          <small>Next level at {pet?.next_level_xp ?? 100} XP</small>
+        </section>
+        <section className="panel">
+          <h2>Skins</h2>
+          <div className="skinGrid">
+            {skins.map((skin) => (
+              <button
+                className={`skinCard ${pet?.current_skin_id === skin.id ? 'selected' : ''}`}
+                key={skin.id}
+                disabled={skin.locked}
+                onClick={() => onSelectSkin(skin.id)}
+              >
+                <span className={`skinSwatch ${skin.palette}`} />
+                <strong>{skin.name}</strong>
+                <small>{skin.locked ? 'Requires Pro simulation' : skin.is_premium ? 'Premium' : 'Unlocked'}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
     </section>
   )
 }
 
-function ProSimulation({ onActivate }) {
+function ProSimulation({ profile, skins, onActivate }) {
+  const isPro = profile?.current_plan === 'pro'
+  const premiumSkins = skins.filter((skin) => skin.is_premium)
+
   return (
     <section className="screen">
       <div className="screenHeader">
         <div>
           <span className="stamp">ГОТОВО</span>
           <h1>Sputnik Pro</h1>
-          <p>V1 includes only the offline simulation toggle. No real payments.</p>
+          <p>Offline simulation only. It unlocks premium Laika skins and a Pro achievement.</p>
         </div>
-        <button className="primaryButton" onClick={onActivate}>
-          <Crown size={18} /> Activate Simulation
+        <button className="primaryButton" disabled={isPro} onClick={onActivate}>
+          <Crown size={18} /> {isPro ? 'Simulation Active' : 'Activate Simulation'}
         </button>
+      </div>
+      <div className="cardGrid">
+        {premiumSkins.map((skin) => (
+          <article className="missionCard" key={skin.id}>
+            <span className={`skinSwatch ${skin.palette}`} />
+            <h3>{skin.name}</h3>
+            <p>{isPro ? 'Available in Companion.' : 'Locked until Sputnik Pro simulation is active.'}</p>
+          </article>
+        ))}
       </div>
     </section>
   )
@@ -570,6 +765,34 @@ function Metric({ label, value }) {
       <strong>{value}</strong>
     </section>
   )
+}
+
+function ActivityList({ events }) {
+  return (
+    <div className="activityList">
+      {events.map((event) => (
+        <article className="activityItem" key={event.id}>
+          <span className="activityDot" />
+          <div>
+            <strong>{event.title}</strong>
+            <small>
+              {event.event_type} {event.mission_title ? `· ${event.mission_title}` : ''} · {formatDate(event.created_at)}
+            </small>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function formatDate(value) {
+  if (!value) return 'just now'
+  return new Date(value.replace(' ', 'T')).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 function MissionRow({ mission }) {

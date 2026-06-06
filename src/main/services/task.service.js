@@ -1,11 +1,13 @@
 import {
-  completeTask,
   createTask,
   deleteTask,
   getTask,
   updateTask
 } from '../database/repositories/tasks.repository.js'
+import { createActivityEvent } from '../database/repositories/activity.repository.js'
+import { getDb } from '../database/connection.js'
 import { getMission } from '../database/repositories/missions.repository.js'
+import { completeTaskWorkflow } from '../workflows/completeTask.workflow.js'
 
 function requireTaskData(data) {
   if (!data?.missionId || !getMission(data.missionId)) {
@@ -18,7 +20,20 @@ function requireTaskData(data) {
 
 export function createTaskService(data) {
   requireTaskData(data)
-  return createTask({ ...data, title: data.title.trim() })
+  const db = getDb()
+  const create = db.transaction(() => {
+    const task = createTask({ ...data, title: data.title.trim() })
+    createActivityEvent({
+      eventType: 'task_created',
+      missionId: task.mission_id,
+      taskId: task.id,
+      title: `Added task: ${task.title}`,
+      details: { taskTitle: task.title }
+    })
+    return task
+  })
+
+  return create()
 }
 
 export function updateTaskService(id, data) {
@@ -31,7 +46,7 @@ export function updateTaskService(id, data) {
 export function completeTaskService(id) {
   const task = getTask(id)
   if (!task) throw new Error('Task not found.')
-  return completeTask(id)
+  return completeTaskWorkflow(id)
 }
 
 export function removeTaskService(id) {

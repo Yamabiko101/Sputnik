@@ -9,13 +9,13 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-v1-C83A32">
+  <img alt="Version" src="https://img.shields.io/badge/version-v3-C83A32">
   <img alt="Desktop" src="https://img.shields.io/badge/desktop-Electron-F4B95E">
   <img alt="Storage" src="https://img.shields.io/badge/storage-SQLite-8BAE66">
   <img alt="Offline" src="https://img.shields.io/badge/offline-first-29231F">
 </p>
 
-Sputnik turns work into missions. V1 gives you a calm desktop cockpit for creating missions, breaking them into tasks, completing focus sessions, writing crew log notes, and watching progress stay local on your machine.
+Sputnik turns work into missions. V3 gives you a calm desktop cockpit for creating missions, breaking them into tasks, completing focus sessions, writing crew log notes, tracking Mission OS telemetry, unlocking achievements, and growing Laika through local progress.
 
 ## See It
 
@@ -45,14 +45,14 @@ Sputnik turns work into missions. V1 gives you a calm desktop cockpit for creati
     </td>
     <td width="50%">
       <br>
-      <h3>V1 Feeling</h3>
-      <p>Retro mission control, warm colors, local data, and a simple flow from plan to focus to notes.</p>
-      <p><strong>Mission -> Tasks -> Focus -> Progress -> Crew Log</strong></p>
+      <h3>V3 Feeling</h3>
+      <p>Retro mission control, warm colors, local data, timeline telemetry, achievements, and Laika companion growth.</p>
+      <p><strong>Mission -> Tasks -> Focus -> Progress -> Crew Log -> Rewards</strong></p>
     </td>
   </tr>
 </table>
 
-## V1 Highlights
+## V3 Highlights
 
 | Area | What It Does |
 | --- | --- |
@@ -60,9 +60,10 @@ Sputnik turns work into missions. V1 gives you a calm desktop cockpit for creati
 | Tasks | Add tasks, complete tasks, and connect tasks to focus sessions |
 | Focus | Run a mission-aware timer and save completed sessions |
 | Crew Log | Keep local notes tied to mission context |
-| Stats | See simple local totals and daily focus activity |
-| Companion | Laika reacts to progress after focus sessions |
-| Pro | Local simulation only, with no real payments in V1 |
+| Stats | Daily snapshots, weekly focus, current streak, and Mission OS activity |
+| Companion | Laika gains XP, levels up, reacts to progress, and supports skins |
+| Achievements | Unlock rewards from real local actions |
+| Pro | Local simulation only, unlocking premium Laika skins |
 
 ## Download And Run
 
@@ -102,18 +103,17 @@ npm run dev
 | `npm run preview` | Preview the built Electron app |
 | `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
-## Version Roadmap
+## Version Architecture
 
-Sputnik is built as a versioned desktop project so each release can grow without losing the offline-first core.
+Sputnik was built in three versions so each layer stays understandable.
 
 | Version | Name | Direction |
 | --- | --- | --- |
 | V1 | Orbital Core | Missions, tasks, focus, notes, stats, local SQLite |
-| V2 | Navigation | Better planning views, richer filters, smoother mission workflows |
-| V3 | Telemetry | Deeper stats, streaks, focus history, richer companion feedback |
-| V4 | Docking Bay | Packaging, installer polish, export/import, backup workflows |
+| V2 | Mission OS | Activity ledger, daily snapshots, transactional workflows, streaks |
+| V3 | Laika and Product Feel | XP, levels, skins, achievements, Pro simulation, keyboard shortcuts |
 
-## V1 Smoke Flow
+## V3 Smoke Flow
 
 Use this flow after running the app:
 
@@ -122,8 +122,10 @@ Use this flow after running the app:
 3. Add tasks to the mission.
 4. Select a mission and task in Focus.
 5. Complete a focus session.
-6. Confirm focus minutes and progress update.
+6. Confirm focus minutes, timeline, stats, Laika XP, and achievements update.
 7. Write a Crew Log note.
+8. Open Companion and switch an unlocked skin.
+9. Activate Sputnik Pro simulation and confirm premium skins unlock.
 
 ## Architecture
 
@@ -157,17 +159,19 @@ Ignored local files include:
 
 ## QA
 
-Current V1 verification:
+Current V3 verification:
 
 ```bash
 npm run build
+npm audit
+npm run preview
 ```
 
 There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.
 
-## V1 Notes
+## V3 Notes
 
 - Sputnik is currently local and offline.
 - Recommended minimum useful window size is around `900x620`.
-- The Pro flow is only a local simulation in V1.
+- The Pro flow is only a local simulation; there are no real payments.
 - Future versions should add automated checks before release.

@@ -1,4 +1,36 @@
 import { getDb } from '../database/connection.js'
+import { listRecentActivity } from '../database/repositories/activity.repository.js'
+import { listRecentSnapshots } from '../database/repositories/snapshots.repository.js'
+
+function getCurrentStreak(db) {
+  const rows = db.prepare(`
+    SELECT day
+    FROM daily_snapshots
+    WHERE focus_minutes > 0
+    ORDER BY day DESC
+  `).all()
+
+  let streak = 0
+  let expected = db.prepare("SELECT date('now') AS day").get().day
+
+  for (const row of rows) {
+    if (row.day === expected) {
+      streak += 1
+      expected = db.prepare("SELECT date(?, '-1 day') AS day").get(expected).day
+      continue
+    }
+
+    if (streak === 0 && row.day === db.prepare("SELECT date('now', '-1 day') AS day").get().day) {
+      streak += 1
+      expected = db.prepare("SELECT date(?, '-1 day') AS day").get(row.day).day
+      continue
+    }
+
+    break
+  }
+
+  return streak
+}
 
 export function getDashboardStats() {
   const db = getDb()
@@ -34,26 +66,33 @@ export function getDashboardStats() {
     LIMIT 1
   `).get()
 
+  const todaySnapshot = db.prepare(`
+    SELECT * FROM daily_snapshots
+    WHERE day = date('now')
+  `).get()
+
   return {
     activeMissions: Number(missionCounts.active ?? 0),
     completedMissions: Number(missionCounts.completed ?? 0),
     totalMissions: Number(missionCounts.total ?? 0),
-    focusMinutesToday: Number(focusToday.minutes ?? 0),
-    completedSessionsToday: Number(focusToday.sessions ?? 0),
+    focusMinutesToday: Number(todaySnapshot?.focus_minutes ?? focusToday.minutes ?? 0),
+    completedSessionsToday: Number(todaySnapshot?.completed_sessions ?? focusToday.sessions ?? 0),
+    completedTasksToday: Number(todaySnapshot?.completed_tasks ?? 0),
+    createdMissionsToday: Number(todaySnapshot?.created_missions ?? 0),
+    createdNotesToday: Number(todaySnapshot?.created_notes ?? 0),
     totalFocusMinutes: Number(totals.total_focus_minutes ?? 0),
     totalFocusSessions: Number(totals.total_focus_sessions ?? 0),
+    currentStreak: getCurrentStreak(db),
+    recentActivity: listRecentActivity(8),
     nextMission: nextMission ?? null
   }
 }
 
 export function getWeeklyStats() {
-  return getDb().prepare(`
-    SELECT date(COALESCE(ended_at, created_at)) AS day,
-           COALESCE(SUM(actual_minutes), 0) AS minutes
-    FROM focus_sessions
-    WHERE status = 'completed'
-      AND date(COALESCE(ended_at, created_at)) >= date('now', '-6 days')
-    GROUP BY day
-    ORDER BY day ASC
-  `).all()
+  return listRecentSnapshots(7).map((snapshot) => ({
+    day: snapshot.day,
+    minutes: snapshot.focus_minutes,
+    sessions: snapshot.completed_sessions,
+    tasks: snapshot.completed_tasks
+  }))
 }
