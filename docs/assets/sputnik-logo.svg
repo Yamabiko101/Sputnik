@@ -1,23 +1,6 @@
-<svg width="720" height="280" viewBox="0 0 720 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="720" height="280" rx="28" fill="#12100E"/>
-  <path d="M0 72H720M0 144H720M0 216H720M90 0V280M180 0V280M270 0V280M360 0V280M450 0V280M540 0V280M630 0V280" stroke="#3A302A" stroke-opacity="0.45"/>
-  <circle cx="180" cy="138" r="84" fill="#1D1916" stroke="#3A302A" stroke-width="3"/>
-  <ellipse cx="180" cy="138" rx="132" ry="42" transform="rotate(-18 180 138)" stroke="#F4B95E" stroke-width="5"/>
-  <ellipse cx="180" cy="138" rx="132" ry="42" transform="rotate(18 180 138)" stroke="#C83A32" stroke-width="5" stroke-opacity="0.85"/>
-  <circle cx="180" cy="138" r="54" fill="#29231F" stroke="#F2D8A7" stroke-width="4"/>
-  <circle cx="160" cy="126" r="7" fill="#F2D8A7"/>
-  <circle cx="200" cy="126" r="7" fill="#F2D8A7"/>
-  <path d="M158 154C169 166 191 166 202 154" stroke="#8BAE66" stroke-width="6" stroke-linecap="round"/>
-  <path d="M130 92L104 62M260 92L286 62M128 178L100 208M262 178L290 208" stroke="#F2D8A7" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="104" cy="62" r="9" fill="#C83A32"/>
-  <circle cx="286" cy="62" r="9" fill="#F4B95E"/>
-  <circle cx="100" cy="208" r="9" fill="#8BAE66"/>
-  <circle cx="290" cy="208" r="9" fill="#D98236"/>
-  <path d="M414 86H664" stroke="#3A302A" stroke-width="3"/>
-  <text x="410" y="132" fill="#F2D8A7" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="1">Sputnik</text>
-  <text x="414" y="168" fill="#F4B95E" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4">MISSION OS</text>
-  <text x="414" y="204" fill="#A99A83" font-family="Inter, Arial, sans-serif" font-size="18">Plan. Focus. Stay in orbit.</text>
-  <circle cx="630" cy="72" r="5" fill="#F4B95E"/>
-  <circle cx="676" cy="112" r="4" fill="#8BAE66"/>
-  <circle cx="580" cy="218" r="4" fill="#C83A32"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#1F1B18"/>
+  <rect x="122" y="96" width="268" height="320" fill="#181512"/>
+  <rect x="149" y="123" width="214" height="214" fill="#1F1B18" stroke="#EF3F36" stroke-width="8"/>
+  <circle cx="256" cy="230" r="43" fill="#DD443C"/>
 </svg>
