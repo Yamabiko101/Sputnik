@@ -1,6 +1,9 @@
 node_modules/
 out/
 dist/
+release/
+build/Sputnik.iconset/
+build/sputnik-logo.svg.png
 .DS_Store
 *.sqlite
 *.sqlite-shm

@@ -113,7 +113,27 @@ Sputnik Pro is a local-only simulation. It does not process payments or connect 
 | Pro Simulation | Local-only premium simulation that unlocks additional companion skins |
 | Offline Storage | All app data is stored locally with SQLite |
 
-## Download And Run
+## Download And Install
+
+The easiest way to use Sputnik is to download the latest installer from GitHub:
+
+<p align="center">
+  <a href="https://github.com/Yamabiko101/Sputnik/releases/latest">
+    <img alt="Download Sputnik" src="https://img.shields.io/badge/Download-Sputnik%20Installer-C83A32?style=for-the-badge">
+  </a>
+</p>
+
+1. Open the [latest Sputnik release](https://github.com/Yamabiko101/Sputnik/releases/latest).
+2. Download the `.dmg` file.
+3. Open the `.dmg`.
+4. Drag `Sputnik` into `Applications`.
+5. Launch Sputnik from `Applications`.
+
+On the first launch, macOS may ask for confirmation because the app is distributed directly from GitHub. If that happens, right-click `Sputnik`, choose `Open`, then confirm once.
+
+The `.zip` file is also available for people who prefer opening the app directly without the installer window.
+
+## Run From Source
 
 Clone the repository:
 
@@ -148,6 +168,7 @@ npm run dev
 | `npm install` | Install dependencies and rebuild native modules |
 | `npm run dev` | Start the Electron app in development mode |
 | `npm run build` | Create a production build |
+| `npm run dist:mac` | Create macOS `.dmg` and `.zip` installers in `release/` |
 | `npm run preview` | Preview the built Electron app |
 | `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
@@ -170,6 +191,7 @@ Ignored local files include:
 - `node_modules/`
 - `out/`
 - `dist/`
+- `release/`
 - SQLite database files
 
 ## Tech Stack
@@ -187,6 +209,7 @@ The current project has been checked with:
 
 ```bash
 npm run build
+npm run dist:mac
 npm audit
 npm run preview
 ```
@@ -198,4 +221,3 @@ There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` 
 - Sputnik is local and offline-first.
 - Recommended minimum useful window size is around `900x620`.
 - The Pro flow is a local simulation; there are no real payments.
-- Future packaging work can add installers and app distribution artifacts.
