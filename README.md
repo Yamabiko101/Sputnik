@@ -5,65 +5,79 @@
 </p>
 
 <p align="center">
-  <strong>A cozy offline mission-control desktop app for planning, focus, and local progress tracking.</strong>
+  <strong>An offline desktop mission-control app for planning work, staying focused, and tracking progress locally.</strong>
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-v3-C83A32">
-  <img alt="Desktop" src="https://img.shields.io/badge/desktop-Electron-F4B95E">
-  <img alt="Storage" src="https://img.shields.io/badge/storage-SQLite-8BAE66">
-  <img alt="Offline" src="https://img.shields.io/badge/offline-first-29231F">
+  <img alt="Desktop" src="https://img.shields.io/badge/Desktop-Electron-C83A32">
+  <img alt="UI" src="https://img.shields.io/badge/UI-React-F4B95E">
+  <img alt="Storage" src="https://img.shields.io/badge/Storage-SQLite-8BAE66">
+  <img alt="Offline" src="https://img.shields.io/badge/Offline-First-29231F">
 </p>
 
-Sputnik turns work into missions. V3 gives you a calm desktop cockpit for creating missions, breaking them into tasks, completing focus sessions, writing crew log notes, tracking Mission OS telemetry, unlocking achievements, and growing Laika through local progress.
+Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines missions, tasks, focus sessions, notes, stats, achievements, and a small companion system into a single desktop app.
 
-## See It
+The app is designed around a simple loop:
+
+```txt
+Plan a mission -> Add tasks -> Focus -> Complete work -> Review progress -> Write notes
+```
+
+## Product Flow
+
+### 1. Start From The Dashboard
 
 <p align="center">
-  <img src="docs/assets/screenshot-dashboard-v1.jpg" alt="Sputnik dashboard screen" width="780">
+  <img src="docs/assets/screenshot-dashboard.jpg" alt="Sputnik dashboard screen" width="820">
 </p>
+
+The dashboard gives you a quick command-center view of your workspace. It shows the current mission, active mission count, focus minutes, completed sessions, recent activity, progress signals, and Laika's current mood.
+
+Use it to answer: What am I working on, how much progress did I make today, and what should I do next?
+
+### 2. Create Missions And Tasks
 
 <p align="center">
-  <strong>Dashboard</strong> · mission status, focus totals, daily sessions, and companion mood
+  <img src="docs/assets/screenshot-missions.jpg" alt="Sputnik missions screen" width="820">
 </p>
 
-<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/assets/screenshot-missions-v1.jpg" alt="Sputnik missions screen">
-      <p align="center"><strong>Missions</strong></p>
-    </td>
-    <td width="50%">
-      <img src="docs/assets/screenshot-focus-v1.jpg" alt="Sputnik focus screen">
-      <p align="center"><strong>Focus</strong></p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="docs/assets/screenshot-crew-log-v1.jpg" alt="Sputnik crew log screen">
-      <p align="center"><strong>Crew Log</strong></p>
-    </td>
-    <td width="50%">
-      <br>
-      <h3>V3 Feeling</h3>
-      <p>Retro mission control, warm colors, local data, timeline telemetry, achievements, and Laika companion growth.</p>
-      <p><strong>Mission -> Tasks -> Focus -> Progress -> Crew Log -> Rewards</strong></p>
-    </td>
-  </tr>
-</table>
+Missions are larger goals. Tasks are the smaller steps inside each mission. Sputnik lets you create missions, add tasks, mark tasks complete, launch focus from a mission, and see progress update from real local actions.
 
-## V3 Highlights
+This keeps planning close to execution: you do not just write down work, you connect it to focus time.
 
-| Area | What It Does |
+### 3. Run Focus Sessions
+
+<p align="center">
+  <img src="docs/assets/screenshot-focus.jpg" alt="Sputnik focus screen" width="820">
+</p>
+
+The focus screen connects a Pomodoro-style session to the selected mission and optional task. Completing a session stores the focus minutes locally, updates mission progress, contributes to stats, and rewards companion progress.
+
+The timer is intentionally large and calm so the app can stay open beside your work.
+
+### 4. Keep A Crew Log
+
+<p align="center">
+  <img src="docs/assets/screenshot-crew-log.jpg" alt="Sputnik crew log screen" width="820">
+</p>
+
+Crew Log is a lightweight notes area for capturing context while the work is still fresh. Notes can be connected to missions so planning, progress, and reflections stay together.
+
+Use it for decisions, blockers, end-of-session notes, or quick project logs.
+
+## What Sputnik Includes
+
+| Area | Description |
 | --- | --- |
-| Missions | Create missions, view progress, and track focus minutes |
-| Tasks | Add tasks, complete tasks, and connect tasks to focus sessions |
-| Focus | Run a mission-aware timer and save completed sessions |
-| Crew Log | Keep local notes tied to mission context |
-| Stats | Daily snapshots, weekly focus, current streak, and Mission OS activity |
-| Companion | Laika gains XP, levels up, reacts to progress, and supports skins |
-| Achievements | Unlock rewards from real local actions |
-| Pro | Local simulation only, unlocking premium Laika skins |
+| Missions | Create goals, track progress, complete missions, and accumulate focus minutes |
+| Tasks | Break missions into concrete work items and complete them from the mission flow |
+| Focus | Run mission-aware focus sessions and save completed work locally |
+| Crew Log | Write local notes connected to the work you are doing |
+| Stats | Review focus totals, weekly activity, streaks, snapshots, and recent activity |
+| Companion | Laika gains XP, levels up, changes mood, and supports unlockable skins |
+| Achievements | Unlock rewards through real app activity |
+| Pro Simulation | Local-only premium simulation that unlocks additional companion skins |
+| Offline Storage | All app data is stored locally with SQLite |
 
 ## Download And Run
 
@@ -86,7 +100,7 @@ Run the desktop app:
 npm run dev
 ```
 
-If you downloaded a ZIP from GitHub, unzip it, open a terminal inside the extracted `Sputnik` folder, then run:
+If you downloaded the project as a ZIP from GitHub, unzip it, open a terminal inside the extracted `Sputnik` folder, then run:
 
 ```bash
 npm install
@@ -103,39 +117,15 @@ npm run dev
 | `npm run preview` | Preview the built Electron app |
 | `npm run rebuild` | Rebuild `better-sqlite3` manually |
 
-## Version Architecture
+## How The App Works
 
-Sputnik was built in three versions so each layer stays understandable.
-
-| Version | Name | Direction |
-| --- | --- | --- |
-| V1 | Orbital Core | Missions, tasks, focus, notes, stats, local SQLite |
-| V2 | Mission OS | Activity ledger, daily snapshots, transactional workflows, streaks |
-| V3 | Laika and Product Feel | XP, levels, skins, achievements, Pro simulation, keyboard shortcuts |
-
-## V3 Smoke Flow
-
-Use this flow after running the app:
-
-1. Open the dashboard.
-2. Create a mission.
-3. Add tasks to the mission.
-4. Select a mission and task in Focus.
-5. Complete a focus session.
-6. Confirm focus minutes, timeline, stats, Laika XP, and achievements update.
-7. Write a Crew Log note.
-8. Open Companion and switch an unlocked skin.
-9. Activate Sputnik Pro simulation and confirm premium skins unlock.
-
-## Architecture
-
-Sputnik keeps desktop-only capabilities out of the renderer:
+Sputnik is an Electron desktop app with a React renderer and a SQLite-backed main process.
 
 ```txt
 React renderer -> preload window.sputnik -> IPC -> services/workflows -> repositories -> SQLite
 ```
 
-SQLite and Electron APIs live in the main process. The renderer uses the preload API exposed as `window.sputnik`.
+The renderer does not access SQLite directly. Desktop and database capabilities stay in the Electron main process, while the renderer talks through a preload API exposed as `window.sputnik`.
 
 ## Local Data
 
@@ -155,11 +145,11 @@ Ignored local files include:
 | Desktop shell | Electron |
 | Build tooling | electron-vite, Vite |
 | Interface | React, lucide-react |
-| Storage | SQLite with better-sqlite3 |
+| Storage | SQLite, better-sqlite3 |
 
-## QA
+## Verification
 
-Current V3 verification:
+The current project has been checked with:
 
 ```bash
 npm run build
@@ -169,9 +159,9 @@ npm run preview
 
 There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.
 
-## V3 Notes
+## Notes
 
-- Sputnik is currently local and offline.
+- Sputnik is local and offline-first.
 - Recommended minimum useful window size is around `900x620`.
-- The Pro flow is only a local simulation; there are no real payments.
-- Future versions should add automated checks before release.
+- The Pro flow is a local simulation; there are no real payments.
+- Future packaging work can add installers and app distribution artifacts.
