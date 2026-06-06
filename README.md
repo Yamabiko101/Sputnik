@@ -20,7 +20,7 @@ Sputnik is a cozy mission-control productivity app for people who want a local, 
 The app is designed around a simple loop:
 
 ```txt
-Plan a mission -> Add tasks -> Focus -> Complete work -> Review progress -> Write notes
+Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> Unlock rewards
 ```
 
 ## Product Flow
@@ -64,6 +64,40 @@ The timer is intentionally large and calm so the app can stay open beside your w
 Crew Log is a lightweight notes area for capturing context while the work is still fresh. Notes can be connected to missions so planning, progress, and reflections stay together.
 
 Use it for decisions, blockers, end-of-session notes, or quick project logs.
+
+### 5. Review Stats And Telemetry
+
+<p align="center">
+  <img src="docs/assets/screenshot-stats.jpg" alt="Sputnik stats screen" width="820">
+</p>
+
+Stats turns completed work into a readable activity picture. It shows total focus minutes, completed sessions, mission count, streaks, weekly focus bars, daily snapshots, and recent Mission OS activity.
+
+Use it to review momentum and understand how your planning habits are changing over time.
+
+### 6. Unlock Achievements
+
+<p align="center">
+  <img src="docs/assets/screenshot-achievements.jpg" alt="Sputnik achievements screen" width="820">
+</p>
+
+Achievements reward real local actions: creating missions, finishing focus sessions, writing logs, completing tasks, and activating the local Pro simulation. Progress is visible even before an achievement is fully unlocked.
+
+### 7. Grow Laika
+
+<p align="center">
+  <img src="docs/assets/screenshot-companion.jpg" alt="Sputnik companion screen" width="820">
+</p>
+
+Laika is Sputnik's companion system. Completed work grants XP, increases levels, changes mood, and unlocks or equips different skins. The companion screen shows current XP, level progress, mood, and available skins.
+
+### 8. Try Sputnik Pro Simulation
+
+<p align="center">
+  <img src="docs/assets/screenshot-pro.jpg" alt="Sputnik Pro simulation screen" width="820">
+</p>
+
+Sputnik Pro is a local-only simulation. It does not process payments or connect to a real billing service. In the app, it demonstrates how premium companion skins and a Pro achievement could unlock while staying fully offline.
 
 ## What Sputnik Includes
 
