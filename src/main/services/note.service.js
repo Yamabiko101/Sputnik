@@ -1,4 +1,4 @@
-import { createNote, deleteNote, listNotes, updateNote } from '../database/repositories/notes.repository.js'
+import { createNote, deleteNote, getNote, listNotes, updateNote } from '../database/repositories/notes.repository.js'
 import { createActivityEvent } from '../database/repositories/activity.repository.js'
 import { getDb } from '../database/connection.js'
 import { incrementDailySnapshot } from '../database/repositories/snapshots.repository.js'
@@ -36,9 +36,37 @@ export function createNoteService(data) {
 
 export function updateNoteService(id, data) {
   if (data?.title !== undefined) requireNoteTitle(data.title)
-  return updateNote(id, data)
+  const db = getDb()
+  const update = db.transaction(() => {
+    const note = updateNote(id, data)
+    if (!note) throw new Error('Crew log not found.')
+    createActivityEvent({
+      eventType: 'note_updated',
+      missionId: note.mission_id,
+      noteId: note.id,
+      title: `Updated Crew Log: ${note.title}`,
+      details: { noteTitle: note.title }
+    })
+    return note
+  })
+
+  return update()
 }
 
 export function removeNoteService(id) {
-  return deleteNote(id)
+  const db = getDb()
+  const remove = db.transaction(() => {
+    const note = getNote(id)
+    if (!note) throw new Error('Crew log not found.')
+    createActivityEvent({
+      eventType: 'note_deleted',
+      missionId: note.mission_id,
+      noteId: note.id,
+      title: `Deleted Crew Log: ${note.title}`,
+      details: { noteTitle: note.title }
+    })
+    return deleteNote(id)
+  })
+
+  return remove()
 }

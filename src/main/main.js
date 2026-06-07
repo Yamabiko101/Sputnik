@@ -1,8 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
-import { initializeDatabase, closeDatabase } from './database/connection.js'
-import { runMigrations } from './database/migrate.js'
-import { seedDatabase } from './database/seed.js'
+import { closeDatabase } from './database/connection.js'
+import { initializeAccounts } from './services/auth.service.js'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers.js'
 
 const isDev = !app.isPackaged
@@ -31,9 +30,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  initializeDatabase()
-  runMigrations()
-  seedDatabase()
+  initializeAccounts()
   registerIpcHandlers()
   createWindow()
 

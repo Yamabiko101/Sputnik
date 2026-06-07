@@ -3,6 +3,16 @@ import { contextBridge, ipcRenderer } from 'electron'
 const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload)
 
 contextBridge.exposeInMainWorld('sputnik', {
+  auth: {
+    listProfiles: () => invoke('auth:listProfiles'),
+    getCurrentProfile: () => invoke('auth:getCurrentProfile'),
+    createProfile: (data) => invoke('auth:createProfile', data),
+    login: (data) => invoke('auth:login', data),
+    logout: () => invoke('auth:logout'),
+    updateProfile: (data) => invoke('auth:updateProfile', data),
+    changePassword: (data) => invoke('auth:changePassword', data),
+    deleteProfile: (data) => invoke('auth:deleteProfile', data)
+  },
   missions: {
     getAll: () => invoke('missions:getAll'),
     getById: (id) => invoke('missions:getById', id),

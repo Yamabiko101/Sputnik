@@ -1,4 +1,14 @@
-export function AppLayout({ navItems, currentView, onNavigate, activeMission, pet, children }) {
+import { ProfileAvatar } from '../../shared/components/pixel/ProfileAvatar.jsx'
+
+export function AppLayout({
+  navItems,
+  currentView,
+  onNavigate,
+  activeMission,
+  pet,
+  profile,
+  children
+}) {
   return (
     <div className="appShell">
       <aside className="sidebar">
@@ -30,6 +40,13 @@ export function AppLayout({ navItems, currentView, onNavigate, activeMission, pe
           <div>
             <span>Current mission</span>
             <strong>{activeMission?.title ?? 'No mission selected'}</strong>
+          </div>
+          <div className="topProfile">
+            <ProfileAvatar avatarKey={profile?.avatar_key} size="small" />
+            <div>
+              <span>Profile</span>
+              <strong>{profile?.display_name ?? 'Commander'}</strong>
+            </div>
           </div>
           <div>
             <span>Companion</span>

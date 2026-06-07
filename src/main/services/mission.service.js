@@ -60,9 +60,35 @@ export function updateMissionService(id, data) {
   if (data?.status === 'completed') {
     return withProgress(completeMissionWorkflow(id))
   }
-  return withProgress(updateMission(id, data))
+  const db = getDb()
+  const update = db.transaction(() => {
+    const mission = updateMission(id, data)
+    if (!mission) throw new Error('Mission not found.')
+    createActivityEvent({
+      eventType: 'mission_updated',
+      missionId: mission.id,
+      title: `Updated mission: ${mission.title}`,
+      details: { missionTitle: mission.title }
+    })
+    return mission
+  })
+
+  return withProgress(update())
 }
 
 export function removeMissionService(id) {
-  return deleteMission(id)
+  const db = getDb()
+  const remove = db.transaction(() => {
+    const mission = getMission(id)
+    if (!mission) throw new Error('Mission not found.')
+    createActivityEvent({
+      eventType: 'mission_deleted',
+      missionId: mission.id,
+      title: `Deleted mission: ${mission.title}`,
+      details: { missionTitle: mission.title }
+    })
+    return deleteMission(id)
+  })
+
+  return remove()
 }

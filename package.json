@@ -1,6 +1,6 @@
 {
   "name": "sputnik",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sputnik offline mission-control productivity app.",
   "author": "Yamabiko101",
   "main": "out/main/main.js",

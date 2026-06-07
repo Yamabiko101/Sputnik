@@ -185,7 +185,9 @@ p {
 .secondaryButton,
 .iconTextButton,
 .toast,
-.checkButton {
+.checkButton,
+.iconButton,
+.dangerButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -207,13 +209,31 @@ p {
   background: #29231f;
 }
 
+.dangerButton {
+  background: rgba(200, 58, 50, 0.18);
+  border-color: #c83a32;
+}
+
+.iconButton {
+  width: 40px;
+  height: 40px;
+  background: #29231f;
+  padding: 0;
+}
+
+.iconButton.danger {
+  color: #f4b95e;
+  border-color: rgba(200, 58, 50, 0.58);
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 
 .primaryButton,
-.secondaryButton {
+.secondaryButton,
+.dangerButton {
   padding: 0 14px;
 }
 
@@ -233,6 +253,75 @@ button:disabled {
   z-index: 10;
   padding: 0 14px;
   color: #f4b95e;
+}
+
+.authScreen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(242, 216, 167, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 216, 167, 0.03) 1px, transparent 1px),
+    #12100e;
+  background-size: 28px 28px;
+}
+
+.authPanel {
+  width: min(100%, 760px);
+  border: 1px solid #3a302a;
+  border-radius: 8px;
+  background: rgba(29, 25, 22, 0.94);
+  padding: 22px;
+}
+
+.authPanel h1 {
+  margin: 6px 0 4px;
+  font-size: 34px;
+}
+
+.avatarChoice {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 168px;
+  border: 1px solid #3a302a;
+  border-radius: 8px;
+  background: #29231f;
+  color: #f6e7c8;
+  padding: 16px;
+  text-align: center;
+}
+
+.avatarChoice.selected {
+  border-color: #f4b95e;
+}
+
+.authForm,
+.profilePreview {
+  display: grid;
+  gap: 12px;
+}
+
+.profilePreview {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-items: start;
+  border: 1px solid #3a302a;
+  border-radius: 8px;
+  background: #29231f;
+  padding: 12px;
+}
+
+.loginProfilePreview {
+  margin-bottom: 4px;
+}
+
+.topProfile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
 }
 
 .metricGrid {
@@ -332,6 +421,29 @@ button:disabled {
   text-align: left;
 }
 
+.cardSelectButton {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.cardActions,
+.rowActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.rowActions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
 .missionCard.selected {
   border-color: #f4b95e;
 }
@@ -415,6 +527,13 @@ textarea {
   grid-template-columns: 38px 1fr auto;
 }
 
+.taskEditForm {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(160px, 1fr) auto auto;
+  gap: 10px;
+}
+
 .missionRow {
   grid-template-columns: 28px 1fr;
 }
@@ -435,6 +554,32 @@ textarea {
 .checkButton.done {
   color: #12100e;
   background: #8bae66;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 16, 14, 0.72);
+}
+
+.modalPanel {
+  width: min(100%, 420px);
+  border: 1px solid #3a302a;
+  border-radius: 8px;
+  background: #1d1916;
+  padding: 18px;
+}
+
+.modalPanel h2 {
+  margin: 0 0 8px;
+}
+
+.modalPanel p {
+  margin: 0 0 16px;
 }
 
 .timerPanel {
@@ -563,6 +708,62 @@ textarea {
   background: linear-gradient(90deg, #f4b95e, #f2d8a7);
 }
 
+.profileAvatar {
+  margin-bottom: 0;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.settingsPanel {
+  display: grid;
+  gap: 12px;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panelTitle h2 {
+  margin: 0;
+}
+
+.numberControl {
+  gap: 8px;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 40px minmax(80px, 1fr) 40px;
+  gap: 8px;
+}
+
+.stepper input {
+  text-align: center;
+}
+
+.stepper.invalid input {
+  border-color: #c83a32;
+}
+
+.divider {
+  height: 1px;
+  background: #3a302a;
+  margin: 4px 0;
+}
+
+.avatarChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
 .activityList,
 .weeklyBars {
   display: grid;
@@ -624,7 +825,9 @@ pre {
   .twoColumn.wideLeft,
   .focusGrid,
   .inlineForm,
-  .selectorRow {
+  .selectorRow,
+  .settingsGrid,
+  .taskEditForm {
     grid-template-columns: 1fr;
   }
 

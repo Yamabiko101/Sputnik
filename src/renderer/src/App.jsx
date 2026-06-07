@@ -4,20 +4,30 @@ import {
   Check,
   ClipboardList,
   Crown,
+  Database,
+  Edit3,
   Gauge,
   Home,
+  Lock,
+  Minus,
   NotebookText,
   PawPrint,
   Play,
   Plus,
   RefreshCw,
+  Save,
   Settings,
+  Shield,
   TimerReset,
-  Trophy
+  Trash2,
+  Trophy,
+  User
 } from 'lucide-react'
 import { AppLayout } from './app/layout/AppLayout.jsx'
 import { EmptyState } from './shared/components/EmptyState.jsx'
 import { PetSprite } from './shared/components/pixel/PetSprite.jsx'
+import { ProfileAvatar } from './shared/components/pixel/ProfileAvatar.jsx'
+import { PROFILE_AVATARS } from './shared/assets/pixel/profileAvatars.js'
 
 const api = window.sputnik
 
@@ -34,6 +44,9 @@ const navItems = [
 ]
 
 export function App() {
+  const [authReady, setAuthReady] = useState(false)
+  const [profiles, setProfiles] = useState([])
+  const [currentProfile, setCurrentProfile] = useState(null)
   const [view, setView] = useState('dashboard')
   const [missions, setMissions] = useState([])
   const [notes, setNotes] = useState([])
@@ -48,6 +61,13 @@ export function App() {
   const [selectedMissionId, setSelectedMissionId] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState('')
   const [message, setMessage] = useState('')
+  const [focusTimer, setFocusTimer] = useState({
+    secondsLeft: 25 * 60,
+    status: 'ready',
+    plannedMinutes: 25,
+    sessionId: null,
+    label: 'Quick focus'
+  })
 
   async function refresh() {
     const [
@@ -90,8 +110,56 @@ export function App() {
   }
 
   useEffect(() => {
-    refresh()
+    async function boot() {
+      try {
+        const [profileList, activeProfile] = await Promise.all([
+          api.auth.listProfiles(),
+          api.auth.getCurrentProfile()
+        ])
+        setProfiles(profileList)
+        setCurrentProfile(activeProfile)
+      } catch (error) {
+        setMessage(error.message)
+      } finally {
+        setAuthReady(true)
+      }
+    }
+
+    boot()
   }, [])
+
+  useEffect(() => {
+    if (currentProfile) refresh()
+  }, [currentProfile?.id])
+
+  useEffect(() => {
+    const nextPlannedMinutes = Number(settings.focus_minutes ?? 25)
+    setFocusTimer((current) => {
+      if (current.status !== 'ready' || current.sessionId) return current
+      return {
+        ...current,
+        plannedMinutes: nextPlannedMinutes,
+        secondsLeft: nextPlannedMinutes * 60
+      }
+    })
+  }, [settings.focus_minutes])
+
+  useEffect(() => {
+    if (focusTimer.status !== 'running') return undefined
+    const timer = window.setInterval(() => {
+      setFocusTimer((current) => ({
+        ...current,
+        secondsLeft: Math.max(current.secondsLeft - 1, 0)
+      }))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [focusTimer.status])
+
+  useEffect(() => {
+    if (focusTimer.secondsLeft === 0 && focusTimer.status === 'running') {
+      setFocusTimer((current) => ({ ...current, status: 'completed' }))
+    }
+  }, [focusTimer.secondsLeft, focusTimer.status])
 
   const selectedMission = useMemo(
     () => missions.find((mission) => String(mission.id) === String(selectedMissionId)),
@@ -103,6 +171,110 @@ export function App() {
     [selectedMission, selectedTaskId]
   )
 
+  function resetWorkspace() {
+    setMissions([])
+    setNotes([])
+    setStats(null)
+    setActivity([])
+    setWeeklyStats([])
+    setPet(null)
+    setSkins([])
+    setAchievements([])
+    setProfile(null)
+    setSettings({})
+    setSelectedMissionId('')
+    setSelectedTaskId('')
+    setFocusTimer({
+      secondsLeft: 25 * 60,
+      status: 'ready',
+      plannedMinutes: 25,
+      sessionId: null,
+      label: 'Quick focus'
+    })
+  }
+
+  function applyAuthResult(result) {
+    setProfiles(result.profiles ?? [])
+    setCurrentProfile(result.profile ?? null)
+    setView('dashboard')
+  }
+
+  async function handleLogout() {
+    resetWorkspace()
+    setCurrentProfile(null)
+    setView('dashboard')
+
+    try {
+      const result = await api.auth.logout()
+      setProfiles(result.profiles ?? [])
+      setMessage('Signed out.')
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  async function startOrPauseFocus() {
+    if (focusTimer.status === 'running') {
+      setFocusTimer((current) => ({ ...current, status: 'paused' }))
+      return
+    }
+
+    if (focusTimer.status === 'paused' && focusTimer.sessionId) {
+      setFocusTimer((current) => ({ ...current, status: 'running' }))
+      return
+    }
+
+    const plannedMinutes = Number(focusTimer.plannedMinutes || settings.focus_minutes || 25)
+    const session = await api.focus.startSession({
+      missionId: selectedMission?.id ?? null,
+      taskId: selectedTask?.id ?? null,
+      mode: 'focus',
+      plannedMinutes
+    })
+    const label = selectedMission
+      ? `${selectedMission.title}${selectedTask ? ` · ${selectedTask.title}` : ''}`
+      : 'Quick focus'
+    setFocusTimer({
+      secondsLeft: plannedMinutes * 60,
+      status: 'running',
+      plannedMinutes,
+      sessionId: session.id,
+      label
+    })
+  }
+
+  async function resetFocusTimer() {
+    if (focusTimer.sessionId) {
+      await api.focus.cancelSession(focusTimer.sessionId)
+    }
+    setFocusTimer((current) => ({
+      secondsLeft: current.plannedMinutes * 60,
+      status: 'ready',
+      plannedMinutes: current.plannedMinutes,
+      sessionId: null,
+      label: 'Quick focus'
+    }))
+  }
+
+  async function completeFocusNow() {
+    await api.focus.completeSession({
+      id: focusTimer.sessionId,
+      missionId: selectedMission?.id ?? null,
+      taskId: selectedTask?.id ?? null,
+      mode: 'focus',
+      plannedMinutes: focusTimer.plannedMinutes,
+      actualMinutes: focusTimer.plannedMinutes
+    })
+    setFocusTimer((current) => ({
+      ...current,
+      secondsLeft: 0,
+      status: 'completed',
+      sessionId: null
+    }))
+    await refresh()
+    setMessage('Focus session saved.')
+  }
+
   async function runAction(action, successMessage) {
     try {
       await action()
@@ -113,6 +285,22 @@ export function App() {
     }
   }
 
+  if (!authReady) {
+    return <LoadingScreen message="Opening mission control..." />
+  }
+
+  if (!currentProfile) {
+    return (
+      <AuthGate
+        profiles={profiles}
+        onCreateProfile={async (data) => applyAuthResult(await api.auth.createProfile(data))}
+        onLogin={async (data) => applyAuthResult(await api.auth.login(data))}
+        message={message}
+        onMessage={setMessage}
+      />
+    )
+  }
+
   return (
     <AppLayout
       navItems={navItems}
@@ -120,6 +308,7 @@ export function App() {
       onNavigate={setView}
       activeMission={selectedMission}
       pet={pet}
+      profile={currentProfile}
     >
       {message && (
         <button className="toast" onClick={() => setMessage('')}>
@@ -149,8 +338,16 @@ export function App() {
           onCreateMission={(data) =>
             runAction(() => api.missions.create(data), 'Mission created.')
           }
+          onUpdateMission={(id, data) =>
+            runAction(() => api.missions.update(id, data), 'Mission updated.')
+          }
+          onDeleteMission={(id) =>
+            runAction(() => api.missions.remove(id), 'Mission deleted.')
+          }
           onCreateTask={(data) => runAction(() => api.tasks.create(data), 'Task added.')}
+          onUpdateTask={(id, data) => runAction(() => api.tasks.update(id, data), 'Task updated.')}
           onCompleteTask={(id) => runAction(() => api.tasks.complete(id), 'Task completed.')}
+          onDeleteTask={(id) => runAction(() => api.tasks.remove(id), 'Task deleted.')}
           onCompleteMission={(id) =>
             runAction(() => api.missions.update(id, { status: 'completed' }), 'Mission completed.')
           }
@@ -171,14 +368,15 @@ export function App() {
           selectedMission={selectedMission}
           selectedTask={selectedTask}
           settings={settings}
+          timer={focusTimer}
           onSelectMission={(id) => {
             setSelectedMissionId(String(id))
             setSelectedTaskId('')
           }}
           onSelectTask={(id) => setSelectedTaskId(String(id))}
-          onComplete={(data) =>
-            runAction(() => api.focus.completeSession(data), 'Focus session saved.')
-          }
+          onStartPause={startOrPauseFocus}
+          onReset={resetFocusTimer}
+          onComplete={completeFocusNow}
         />
       )}
 
@@ -187,6 +385,8 @@ export function App() {
           notes={notes}
           missions={missions}
           onCreateNote={(data) => runAction(() => api.notes.create(data), 'Crew log saved.')}
+          onUpdateNote={(id, data) => runAction(() => api.notes.update(id, data), 'Crew log updated.')}
+          onDeleteNote={(id) => runAction(() => api.notes.remove(id), 'Crew log deleted.')}
         />
       )}
 
@@ -203,11 +403,221 @@ export function App() {
         <ProSimulation
           profile={profile}
           skins={skins}
-          onActivate={() => runAction(() => api.pro.activateSimulation(), 'Sputnik Pro simulation activated.')}
+          onActivate={() =>
+            runAction(async () => {
+              await api.pro.activateSimulation()
+              setCurrentProfile(await api.auth.getCurrentProfile())
+            }, 'Sputnik Pro simulation activated.')
+          }
         />
       )}
-      {view === 'settings' && <SettingsPanel settings={settings} />}
+      {view === 'settings' && (
+        <SettingsPanel
+          settings={settings}
+          profile={currentProfile}
+          onSaveSetting={(key, value) =>
+            runAction(() => api.settings.set(key, value), 'Settings saved.')
+          }
+          onUpdateProfile={async (data) => {
+            try {
+              const result = await api.auth.updateProfile(data)
+              applyAuthResult(result)
+              setMessage('Profile updated.')
+            } catch (error) {
+              setMessage(error.message)
+            }
+          }}
+          onChangePassword={(data) =>
+            runAction(() => api.auth.changePassword(data), 'Password updated.')
+          }
+          onLogout={handleLogout}
+          onDeleteProfile={async (data) => {
+            try {
+              const result = await api.auth.deleteProfile({ ...data, profileId: currentProfile.id })
+              resetWorkspace()
+              applyAuthResult(result)
+              setMessage('Profile deleted.')
+            } catch (error) {
+              setMessage(error.message)
+            }
+          }}
+        />
+      )}
     </AppLayout>
+  )
+}
+
+function LoadingScreen({ message }) {
+  return (
+    <main className="authScreen">
+      <section className="authPanel">
+        <span className="stamp">СПУТНИК</span>
+        <h1>Sputnik</h1>
+        <p>{message}</p>
+      </section>
+    </main>
+  )
+}
+
+function AuthGate({ profiles, onCreateProfile, onLogin, message, onMessage }) {
+  const [selectedProfileId, setSelectedProfileId] = useState(profiles[0]?.id ?? '')
+  const [displayName, setDisplayName] = useState('')
+  const [password, setPassword] = useState('')
+  const [mode, setMode] = useState(profiles.length ? 'login' : 'create')
+  const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? profiles[0]
+
+  useEffect(() => {
+    setMode(profiles.length ? 'login' : 'create')
+    if (!selectedProfileId && profiles[0]) {
+      setSelectedProfileId(profiles[0].id)
+    }
+  }, [profiles, profiles.length, selectedProfileId])
+
+  async function submitLogin(event) {
+    event.preventDefault()
+    try {
+      await onLogin({ profileId: selectedProfile.id, password })
+      setPassword('')
+    } catch (error) {
+      onMessage(error.message)
+    }
+  }
+
+  async function submitCreate(event) {
+    event.preventDefault()
+    try {
+      await onCreateProfile({
+        displayName,
+        password,
+        avatarKey: 'orbital-satellite'
+      })
+      setDisplayName('')
+      setPassword('')
+      setMode('login')
+    } catch (error) {
+      onMessage(error.message)
+    }
+  }
+
+  return (
+    <main className="authScreen">
+      {message && (
+        <button className="toast" onClick={() => onMessage('')}>
+          {message}
+        </button>
+      )}
+      <section className="authPanel">
+        <div className="screenHeader">
+          <div>
+            <span className="stamp">КОМАНДА</span>
+            <h1>Sputnik</h1>
+            <p>Enter your local Mission OS profile.</p>
+          </div>
+        </div>
+
+        {mode === 'login' && selectedProfile && (
+          <form className="authForm" onSubmit={submitLogin}>
+            <div className="profilePreview loginProfilePreview">
+              <ProfileAvatar avatarKey={selectedProfile.avatar_key} size="large" />
+              <div>
+                <strong>{selectedProfile.display_name}</strong>
+                <small>{selectedProfile.current_plan === 'pro' ? 'Sputnik Pro' : 'Free'}</small>
+              </div>
+            </div>
+            {profiles.length > 1 && (
+              <label>
+                Profile
+                <select
+                  value={selectedProfile.id}
+                  onChange={(event) => {
+                    setSelectedProfileId(event.target.value)
+                    setPassword('')
+                  }}
+                >
+                  {profiles.map((profileItem) => (
+                    <option key={profileItem.id} value={profileItem.id}>
+                      {profileItem.display_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label>
+              Password
+              <input
+                autoFocus
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={`Enter ${selectedProfile.display_name}'s password`}
+                type="password"
+              />
+            </label>
+            <div className="actions">
+              <button className="primaryButton" disabled={!password} type="submit">
+                <Lock size={18} /> Enter
+              </button>
+              <button
+                className="secondaryButton"
+                type="button"
+                onClick={() => {
+                  setMode('create')
+                  setPassword('')
+                }}
+              >
+                <Plus size={18} /> Create Profile
+              </button>
+            </div>
+          </form>
+        )}
+
+        {mode === 'create' && (
+          <form className="authForm" onSubmit={submitCreate}>
+            <div className="profilePreview">
+              <ProfileAvatar avatarKey="orbital-satellite" size="large" />
+              <div>
+                <strong>Orbital Satellite</strong>
+                <small>Free profile avatar</small>
+              </div>
+            </div>
+            <label>
+              Profile name
+              <input
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="Commander"
+              />
+            </label>
+            <label>
+              Password
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Local password"
+                type="password"
+              />
+            </label>
+            <div className="actions">
+              <button className="primaryButton" disabled={!displayName.trim() || !password} type="submit">
+                <Plus size={18} /> Create Profile
+              </button>
+              {profiles.length > 0 && (
+                <button
+                  className="secondaryButton"
+                  type="button"
+                  onClick={() => {
+                    setMode('login')
+                    setDisplayName('')
+                    setPassword('')
+                  }}
+                >
+                  Back to Login
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+      </section>
+    </main>
   )
 }
 
@@ -285,14 +695,21 @@ function Missions({
   selectedMissionId,
   onSelectMission,
   onCreateMission,
+  onUpdateMission,
+  onDeleteMission,
   onCreateTask,
+  onUpdateTask,
   onCompleteTask,
+  onDeleteTask,
   onCompleteMission,
   onStartFocus
 }) {
   const [missionTitle, setMissionTitle] = useState('')
   const [description, setDescription] = useState('')
   const [taskTitle, setTaskTitle] = useState('')
+  const [editingMissionId, setEditingMissionId] = useState(null)
+  const [editingTaskId, setEditingTaskId] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
   const activeMission = missions.find((mission) => String(mission.id) === String(selectedMissionId))
 
   return (
@@ -329,19 +746,45 @@ function Missions({
           ) : (
             <div className="cardGrid">
               {missions.map((mission) => (
-                <button
+                <article
                   className={`missionCard ${String(mission.id) === String(selectedMissionId) ? 'selected' : ''}`}
                   key={mission.id}
-                  onClick={() => onSelectMission(mission.id)}
                 >
-                  <span className="meta">{mission.priority} priority</span>
-                  <h3>{mission.title}</h3>
-                  <p>{mission.description || 'No description yet.'}</p>
-                  <div className="progressBar">
-                    <span style={{ width: `${mission.progress}%` }} />
-                  </div>
-                  <small>{mission.progress}% complete · {mission.total_focus_minutes} focus min</small>
-                </button>
+                  {editingMissionId === mission.id ? (
+                    <MissionEditForm
+                      mission={mission}
+                      onCancel={() => setEditingMissionId(null)}
+                      onSave={(data) => {
+                        onUpdateMission(mission.id, data)
+                        setEditingMissionId(null)
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <button className="cardSelectButton" onClick={() => onSelectMission(mission.id)}>
+                        <span className="meta">{mission.priority} priority</span>
+                        <h3>{mission.title}</h3>
+                        <p>{mission.description || 'No description yet.'}</p>
+                        <div className="progressBar">
+                          <span style={{ width: `${mission.progress}%` }} />
+                        </div>
+                        <small>{mission.progress}% complete · {mission.total_focus_minutes} focus min</small>
+                      </button>
+                      <div className="cardActions">
+                        <button className="iconButton" title="Edit mission" onClick={() => setEditingMissionId(mission.id)}>
+                          <Edit3 size={16} />
+                        </button>
+                        <button
+                          className="iconButton danger"
+                          title="Delete mission"
+                          onClick={() => setConfirmDelete({ type: 'mission', id: mission.id, name: mission.title })}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </article>
               ))}
             </div>
           )}
@@ -369,20 +812,51 @@ function Missions({
               <div className="list taskList">
                 {activeMission.tasks.map((task) => (
                   <div className="taskRow" key={task.id}>
-                    <button
-                      className={`checkButton ${task.status === 'done' ? 'done' : ''}`}
-                      onClick={() => onCompleteTask(task.id)}
-                      title="Complete task"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <div>
-                      <strong>{task.title}</strong>
-                      <small>{task.status} · {task.focus_minutes} focus min</small>
-                    </div>
-                    <button className="iconTextButton" onClick={() => onStartFocus(activeMission.id, task.id)}>
-                      <Play size={16} /> Focus
-                    </button>
+                    {editingTaskId === task.id ? (
+                      <TaskEditForm
+                        task={task}
+                        onCancel={() => setEditingTaskId(null)}
+                        onSave={(data) => {
+                          onUpdateTask(task.id, data)
+                          setEditingTaskId(null)
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <button
+                          className={`checkButton ${task.status === 'done' ? 'done' : ''}`}
+                          onClick={() => {
+                            if (task.status === 'done') {
+                              onUpdateTask(task.id, { status: 'todo' })
+                            } else {
+                              onCompleteTask(task.id)
+                            }
+                          }}
+                          title={task.status === 'done' ? 'Reopen task' : 'Complete task'}
+                        >
+                          <Check size={16} />
+                        </button>
+                        <div>
+                          <strong>{task.title}</strong>
+                          <small>{task.status} · {task.focus_minutes} focus min</small>
+                        </div>
+                        <div className="rowActions">
+                          <button className="iconTextButton" onClick={() => onStartFocus(activeMission.id, task.id)}>
+                            <Play size={16} /> Focus
+                          </button>
+                          <button className="iconButton" title="Edit task" onClick={() => setEditingTaskId(task.id)}>
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            className="iconButton danger"
+                            title="Delete task"
+                            onClick={() => setConfirmDelete({ type: 'task', id: task.id, name: task.title })}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -400,7 +874,103 @@ function Missions({
           )}
         </section>
       </div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title={`Delete ${confirmDelete.type}`}
+          body={`Delete "${confirmDelete.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => {
+            if (confirmDelete.type === 'mission') onDeleteMission(confirmDelete.id)
+            if (confirmDelete.type === 'task') onDeleteTask(confirmDelete.id)
+            setConfirmDelete(null)
+          }}
+        />
+      )}
     </section>
+  )
+}
+
+function MissionEditForm({ mission, onSave, onCancel }) {
+  const [title, setTitle] = useState(mission.title)
+  const [description, setDescription] = useState(mission.description ?? '')
+  const [priority, setPriority] = useState(mission.priority ?? 'medium')
+  const [status, setStatus] = useState(mission.status ?? 'active')
+  const [dueDate, setDueDate] = useState(mission.due_date ?? '')
+
+  return (
+    <form
+      className="stackForm"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave({ title, description, priority, status, dueDate: dueDate || null })
+      }}
+    >
+      <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Mission title" />
+      <input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Short description" />
+      <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+        <option value="low">low</option>
+        <option value="medium">medium</option>
+        <option value="high">high</option>
+        <option value="critical">critical</option>
+      </select>
+      <select value={status} onChange={(event) => setStatus(event.target.value)}>
+        <option value="planned">planned</option>
+        <option value="active">active</option>
+        <option value="completed">completed</option>
+        <option value="archived">archived</option>
+      </select>
+      <input value={dueDate} onChange={(event) => setDueDate(event.target.value)} type="date" />
+      <div className="actions">
+        <button className="primaryButton" disabled={!title.trim()} type="submit">
+          <Save size={16} /> Save
+        </button>
+        <button className="secondaryButton" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function TaskEditForm({ task, onSave, onCancel }) {
+  const [title, setTitle] = useState(task.title)
+
+  return (
+    <form
+      className="taskEditForm"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave({ title })
+      }}
+    >
+      <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Task title" />
+      <button className="primaryButton" disabled={!title.trim()} type="submit">
+        <Save size={16} /> Save
+      </button>
+      <button className="secondaryButton" type="button" onClick={onCancel}>
+        Cancel
+      </button>
+    </form>
+  )
+}
+
+function ConfirmDialog({ title, body, confirmLabel, onConfirm, onCancel }) {
+  return (
+    <div className="modalOverlay" role="presentation">
+      <section className="modalPanel" role="dialog" aria-modal="true" aria-label={title}>
+        <h2>{title}</h2>
+        <p>{body}</p>
+        <div className="actions">
+          <button className="dangerButton" onClick={onConfirm}>
+            <Trash2 size={16} /> {confirmLabel}
+          </button>
+          <button className="secondaryButton" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -412,68 +982,43 @@ function Focus({
   selectedMission,
   selectedTask,
   settings,
+  timer,
   onSelectMission,
   onSelectTask,
+  onStartPause,
+  onReset,
   onComplete
 }) {
-  const plannedMinutes = Number(settings.focus_minutes ?? 25)
-  const [secondsLeft, setSecondsLeft] = useState(plannedMinutes * 60)
-  const [status, setStatus] = useState('ready')
-
-  useEffect(() => {
-    setSecondsLeft(plannedMinutes * 60)
-  }, [plannedMinutes])
-
-  useEffect(() => {
-    if (status !== 'running') return undefined
-    const timer = window.setInterval(() => {
-      setSecondsLeft((current) => Math.max(current - 1, 0))
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [status])
-
-  useEffect(() => {
-    if (secondsLeft === 0 && status === 'running') {
-      setStatus('completed')
-    }
-  }, [secondsLeft, status])
-
   useEffect(() => {
     function handleShortcut(event) {
       if (event.target?.matches?.('input, select, textarea')) return
 
       if (event.code === 'Space') {
         event.preventDefault()
-        setStatus((current) => (current === 'running' ? 'paused' : 'running'))
+        onStartPause()
       }
 
       if (event.key.toLowerCase() === 's') {
-        setStatus('running')
+        onStartPause()
       }
 
       if (event.key.toLowerCase() === 'r') {
-        setStatus('ready')
-        setSecondsLeft(plannedMinutes * 60)
+        onReset()
       }
     }
 
     window.addEventListener('keydown', handleShortcut)
     return () => window.removeEventListener('keydown', handleShortcut)
-  }, [plannedMinutes])
+  }, [onReset, onStartPause])
 
+  const plannedMinutes = Number(timer.plannedMinutes ?? settings.focus_minutes ?? 25)
+  const secondsLeft = timer.secondsLeft
+  const status = timer.status
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
-
-  async function completeNow() {
-    await onComplete({
-      missionId: selectedMission?.id ?? null,
-      taskId: selectedTask?.id ?? null,
-      mode: 'focus',
-      plannedMinutes,
-      actualMinutes: plannedMinutes
-    })
-    setStatus('completed')
-  }
+  const progress = plannedMinutes > 0
+    ? 100 - (secondsLeft / (plannedMinutes * 60)) * 100
+    : 0
 
   return (
     <section className="screen">
@@ -513,16 +1058,16 @@ function Focus({
             {selectedMission ? selectedMission.title : 'Quick focus'} {selectedTask ? `· ${selectedTask.title}` : ''}
           </div>
           <div className="progressBar large">
-            <span style={{ width: `${100 - (secondsLeft / (plannedMinutes * 60)) * 100}%` }} />
+            <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
           </div>
           <div className="actions center">
-            <button className="primaryButton" onClick={() => setStatus(status === 'running' ? 'paused' : 'running')}>
+            <button className="primaryButton" onClick={onStartPause}>
               <Play size={18} /> {status === 'running' ? 'Pause' : 'Start'}
             </button>
-            <button className="secondaryButton" onClick={() => setSecondsLeft(plannedMinutes * 60)}>
+            <button className="secondaryButton" onClick={onReset}>
               <RefreshCw size={18} /> Reset
             </button>
-            <button className="secondaryButton" onClick={completeNow}>
+            <button className="secondaryButton" onClick={onComplete}>
               <Check size={18} /> Complete Session
             </button>
           </div>
@@ -538,10 +1083,12 @@ function Focus({
   )
 }
 
-function CrewLog({ notes, missions, onCreateNote }) {
+function CrewLog({ notes, missions, onCreateNote, onUpdateNote, onDeleteNote }) {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [missionId, setMissionId] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   return (
     <section className="screen">
@@ -576,13 +1123,84 @@ function CrewLog({ notes, missions, onCreateNote }) {
       <div className="list">
         {notes.map((note) => (
           <article className="logEntry" key={note.id}>
-            <span className="meta">{note.mission_title || 'General'}</span>
-            <h3>{note.title}</h3>
-            <p>{note.body}</p>
+            {editingNoteId === note.id ? (
+              <NoteEditForm
+                note={note}
+                missions={missions}
+                onCancel={() => setEditingNoteId(null)}
+                onSave={(data) => {
+                  onUpdateNote(note.id, data)
+                  setEditingNoteId(null)
+                }}
+              />
+            ) : (
+              <>
+                <span className="meta">{note.mission_title || 'General'}</span>
+                <h3>{note.title}</h3>
+                <p>{note.body}</p>
+                <div className="cardActions">
+                  <button className="iconButton" title="Edit log" onClick={() => setEditingNoteId(note.id)}>
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    className="iconButton danger"
+                    title="Delete log"
+                    onClick={() => setConfirmDelete({ id: note.id, name: note.title })}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </>
+            )}
           </article>
         ))}
       </div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete Crew Log"
+          body={`Delete "${confirmDelete.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => {
+            onDeleteNote(confirmDelete.id)
+            setConfirmDelete(null)
+          }}
+        />
+      )}
     </section>
+  )
+}
+
+function NoteEditForm({ note, missions, onSave, onCancel }) {
+  const [title, setTitle] = useState(note.title)
+  const [body, setBody] = useState(note.body)
+  const [missionId, setMissionId] = useState(note.mission_id ? String(note.mission_id) : '')
+
+  return (
+    <form
+      className="noteComposer compact"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave({ title, body, missionId: missionId || null })
+      }}
+    >
+      <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Log title" />
+      <select value={missionId} onChange={(event) => setMissionId(event.target.value)}>
+        <option value="">No mission</option>
+        {missions.map((mission) => (
+          <option key={mission.id} value={mission.id}>{mission.title}</option>
+        ))}
+      </select>
+      <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Write the log entry..." />
+      <div className="actions">
+        <button className="primaryButton" disabled={!title.trim()} type="submit">
+          <Save size={16} /> Save
+        </button>
+        <button className="secondaryButton" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -741,7 +1359,42 @@ function ProSimulation({ profile, skins, onActivate }) {
   )
 }
 
-function SettingsPanel({ settings }) {
+function SettingsPanel({
+  settings,
+  profile,
+  onSaveSetting,
+  onUpdateProfile,
+  onChangePassword,
+  onLogout,
+  onDeleteProfile
+}) {
+  const [focusMinutes, setFocusMinutes] = useState(String(settings.focus_minutes ?? 25))
+  const [shortBreakMinutes, setShortBreakMinutes] = useState(String(settings.short_break_minutes ?? 5))
+  const [longBreakMinutes, setLongBreakMinutes] = useState(String(settings.long_break_minutes ?? 15))
+  const [displayName, setDisplayName] = useState(profile?.display_name ?? 'Commander')
+  const [avatarKey, setAvatarKey] = useState(profile?.avatar_key ?? 'orbital-satellite')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [nextPassword, setNextPassword] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  useEffect(() => {
+    setFocusMinutes(String(settings.focus_minutes ?? 25))
+    setShortBreakMinutes(String(settings.short_break_minutes ?? 5))
+    setLongBreakMinutes(String(settings.long_break_minutes ?? 15))
+  }, [settings.focus_minutes, settings.short_break_minutes, settings.long_break_minutes])
+
+  useEffect(() => {
+    setDisplayName(profile?.display_name ?? 'Commander')
+    setAvatarKey(profile?.avatar_key ?? 'orbital-satellite')
+  }, [profile?.display_name, profile?.avatar_key])
+
+  const focusValid = isValidMinuteValue(focusMinutes, 1, 120)
+  const shortValid = isValidMinuteValue(shortBreakMinutes, 1, 30)
+  const longValid = isValidMinuteValue(longBreakMinutes, 1, 60)
+  const settingsValid = focusValid && shortValid && longValid
+  const isPro = profile?.current_plan === 'pro'
+
   return (
     <section className="screen">
       <div className="screenHeader">
@@ -751,11 +1404,203 @@ function SettingsPanel({ settings }) {
           <p>Focus defaults are stored locally in SQLite.</p>
         </div>
       </div>
-      <section className="panel">
-        <pre>{JSON.stringify(settings, null, 2)}</pre>
-      </section>
+      <div className="settingsGrid">
+        <section className="panel settingsPanel">
+          <PanelTitle icon={TimerReset} title="Focus" />
+          <NumberStepper
+            label="Focus minutes"
+            max={120}
+            min={1}
+            value={focusMinutes}
+            onChange={setFocusMinutes}
+          />
+          <NumberStepper
+            label="Short break"
+            max={30}
+            min={1}
+            value={shortBreakMinutes}
+            onChange={setShortBreakMinutes}
+          />
+          <NumberStepper
+            label="Long break"
+            max={60}
+            min={1}
+            value={longBreakMinutes}
+            onChange={setLongBreakMinutes}
+          />
+          <button
+            className="primaryButton"
+            disabled={!settingsValid}
+            onClick={async () => {
+              await onSaveSetting('focus_minutes', Number(focusMinutes))
+              await onSaveSetting('short_break_minutes', Number(shortBreakMinutes))
+              await onSaveSetting('long_break_minutes', Number(longBreakMinutes))
+            }}
+          >
+            <Save size={18} /> Save Focus Defaults
+          </button>
+        </section>
+
+        <section className="panel settingsPanel">
+          <PanelTitle icon={User} title="Profile" />
+          <label>
+            Profile name
+            <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
+          </label>
+          <button
+            className="primaryButton"
+            disabled={!displayName.trim()}
+            onClick={() => onUpdateProfile({ displayName, avatarKey })}
+          >
+            <Save size={18} /> Save Profile
+          </button>
+          <div className="divider" />
+          <label>
+            Current password
+            <input
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              type="password"
+            />
+          </label>
+          <label>
+            New password
+            <input
+              value={nextPassword}
+              onChange={(event) => setNextPassword(event.target.value)}
+              type="password"
+            />
+          </label>
+          <button
+            className="secondaryButton"
+            disabled={!currentPassword || !nextPassword}
+            onClick={() => {
+              onChangePassword({ currentPassword, nextPassword })
+              setCurrentPassword('')
+              setNextPassword('')
+            }}
+          >
+            <Shield size={18} /> Change Password
+          </button>
+        </section>
+
+        <section className="panel settingsPanel">
+          <PanelTitle icon={PawPrint} title="Appearance" />
+          <div className="avatarChoiceGrid">
+            {PROFILE_AVATARS.map((avatar) => {
+              const locked = avatar.isPremium && !isPro
+              return (
+                <button
+                  className={`avatarChoice ${avatarKey === avatar.key ? 'selected' : ''}`}
+                  disabled={locked}
+                  key={avatar.key}
+                  onClick={() => {
+                    setAvatarKey(avatar.key)
+                    onUpdateProfile({ displayName, avatarKey: avatar.key })
+                  }}
+                >
+                  <ProfileAvatar avatarKey={avatar.key} size="medium" />
+                  <strong>{avatar.name}</strong>
+                  <small>{locked ? 'Requires Sputnik Pro' : avatar.isPremium ? 'Sputnik Pro' : 'Free'}</small>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="panel settingsPanel">
+          <PanelTitle icon={Database} title="Data" />
+          <p>Close the current profile and return to login. Your local data stays saved.</p>
+          <button className="secondaryButton" type="button" onClick={onLogout}>
+            <Lock size={18} /> Sign Out
+          </button>
+          <div className="divider" />
+          <label>
+            Password
+            <input
+              value={deletePassword}
+              onChange={(event) => setDeletePassword(event.target.value)}
+              placeholder="Required to delete profile"
+              type="password"
+            />
+          </label>
+          <button className="dangerButton" disabled={!deletePassword} onClick={() => setConfirmDelete(true)}>
+            <Trash2 size={18} /> Delete Profile
+          </button>
+        </section>
+      </div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete profile"
+          body={`Delete "${profile.display_name}" and its local Sputnik data? This cannot be undone.`}
+          confirmLabel="Delete Profile"
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => {
+            onDeleteProfile({ password: deletePassword })
+            setDeletePassword('')
+            setConfirmDelete(false)
+          }}
+        />
+      )}
     </section>
   )
+}
+
+function PanelTitle({ icon: Icon, title }) {
+  return (
+    <div className="panelTitle">
+      <Icon size={18} />
+      <h2>{title}</h2>
+    </div>
+  )
+}
+
+function NumberStepper({ label, value, min, max, onChange }) {
+  const valid = isValidMinuteValue(value, min, max)
+
+  function update(nextValue) {
+    if (nextValue === '' || /^\d+$/.test(nextValue)) {
+      onChange(nextValue)
+    }
+  }
+
+  return (
+    <label className="numberControl">
+      {label}
+      <div className={`stepper ${valid ? '' : 'invalid'}`.trim()}>
+        <button
+          className="iconButton"
+          type="button"
+          onClick={() => onChange(String(Math.max(min, Number(value || min) - 1)))}
+        >
+          <Minus size={16} />
+        </button>
+        <input
+          inputMode="numeric"
+          max={max}
+          min={min}
+          step="1"
+          type="number"
+          value={value}
+          onChange={(event) => update(event.target.value)}
+        />
+        <button
+          className="iconButton"
+          type="button"
+          onClick={() => onChange(String(Math.min(max, Number(value || min) + 1)))}
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      {!valid && <small>Use a whole number from {min} to {max}.</small>}
+    </label>
+  )
+}
+
+function isValidMinuteValue(value, min, max) {
+  if (!/^\d+$/.test(String(value))) return false
+  const numberValue = Number(value)
+  return Number.isInteger(numberValue) && numberValue >= min && numberValue <= max
 }
 
 function Metric({ label, value }) {

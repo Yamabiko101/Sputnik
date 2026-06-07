@@ -1,5 +1,15 @@
 import { ipcMain } from 'electron'
 import {
+  changePasswordService,
+  createProfileService,
+  deleteProfileService,
+  getCurrentProfileService,
+  listProfilesService,
+  loginProfileService,
+  logoutProfileService,
+  updateProfileService
+} from '../services/auth.service.js'
+import {
   createMissionService,
   getAllMissions,
   getMissionById,
@@ -44,6 +54,15 @@ function handle(channel, listener) {
 }
 
 export function registerIpcHandlers() {
+  handle('auth:listProfiles', () => listProfilesService())
+  handle('auth:getCurrentProfile', () => getCurrentProfileService())
+  handle('auth:createProfile', (data) => createProfileService(data))
+  handle('auth:login', (data) => loginProfileService(data))
+  handle('auth:logout', () => logoutProfileService())
+  handle('auth:updateProfile', (data) => updateProfileService(data))
+  handle('auth:changePassword', (data) => changePasswordService(data))
+  handle('auth:deleteProfile', (data) => deleteProfileService(data))
+
   handle('missions:getAll', () => getAllMissions())
   handle('missions:getById', (id) => getMissionById(id))
   handle('missions:create', (data) => createMissionService(data))

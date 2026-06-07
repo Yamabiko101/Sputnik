@@ -40,7 +40,21 @@ export function updateTaskService(id, data) {
   if (data?.title !== undefined && !String(data.title).trim()) {
     throw new Error('Task title is required.')
   }
-  return updateTask(id, data)
+  const db = getDb()
+  const update = db.transaction(() => {
+    const task = updateTask(id, data)
+    if (!task) throw new Error('Task not found.')
+    createActivityEvent({
+      eventType: 'task_updated',
+      missionId: task.mission_id,
+      taskId: task.id,
+      title: `Updated task: ${task.title}`,
+      details: { taskTitle: task.title, status: task.status }
+    })
+    return task
+  })
+
+  return update()
 }
 
 export function completeTaskService(id) {
@@ -50,5 +64,19 @@ export function completeTaskService(id) {
 }
 
 export function removeTaskService(id) {
-  return deleteTask(id)
+  const db = getDb()
+  const remove = db.transaction(() => {
+    const task = getTask(id)
+    if (!task) throw new Error('Task not found.')
+    createActivityEvent({
+      eventType: 'task_deleted',
+      missionId: task.mission_id,
+      taskId: task.id,
+      title: `Deleted task: ${task.title}`,
+      details: { taskTitle: task.title }
+    })
+    return deleteTask(id)
+  })
+
+  return remove()
 }

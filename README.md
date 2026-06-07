@@ -1,7 +1,7 @@
 # Sputnik
 
 <p align="center">
-  <img src="docs/assets/sputnik-logo.svg" alt="Sputnik Mission OS logo" width="720">
+  <img src="docs/assets/sputnik-logo.svg" alt="Sputnik logo" width="180">
 </p>
 
 <p align="center">
@@ -15,17 +15,38 @@
   <img alt="Offline" src="https://img.shields.io/badge/Offline-First-29231F">
 </p>
 
-Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines missions, tasks, focus sessions, notes, stats, achievements, and a small companion system into a single desktop app.
+Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines local profiles, missions, tasks, focus sessions, notes, stats, achievements, settings, and a small companion system into a single desktop app.
 
 The app is designed around a simple loop:
 
 ```txt
-Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> Unlock rewards
+Log in -> Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> Unlock rewards
 ```
+
+## Current Release
+
+Sputnik `1.0.0` is the complete macOS desktop release. This version adds the final local profile system and ships as a downloadable macOS installer.
+
+## What's New
+
+| Update | Description |
+| --- | --- |
+| Local profiles | Create password-protected profiles and keep each workspace separate |
+| Profile login | Return to saved local profiles without mixing mission data |
+| Profile settings | Rename profiles, change passwords, log out, or delete a profile with confirmation |
+| Pixel avatars | Choose animated profile avatars, with a Pro avatar unlocked by the local Pro simulation |
+| Separate local databases | Each profile stores its own missions, tasks, notes, stats, achievements, and companion state |
+| Better activity tracking | Mission, task, and Crew Log edits/deletions now create activity events |
+| Safer timer settings | Focus and break duration settings are validated before saving |
+| macOS installer | Download the `.dmg`, drag Sputnik into Applications, and run it locally |
 
 ## Product Flow
 
-### 1. Start From The Dashboard
+### 1. Create Or Open A Profile
+
+Sputnik starts with a local profile gate. Create a profile with a name and password, or log back into an existing profile. Profiles are stored locally and keep their workspaces separate.
+
+### 2. Start From The Dashboard
 
 <p align="center">
   <img src="docs/assets/screenshot-dashboard.jpg" alt="Sputnik dashboard screen" width="820">
@@ -35,7 +56,7 @@ The dashboard gives you a quick command-center view of your workspace. It shows 
 
 Use it to answer: What am I working on, how much progress did I make today, and what should I do next?
 
-### 2. Create Missions And Tasks
+### 3. Create Missions And Tasks
 
 <p align="center">
   <img src="docs/assets/screenshot-missions.jpg" alt="Sputnik missions screen" width="820">
@@ -45,7 +66,7 @@ Missions are larger goals. Tasks are the smaller steps inside each mission. Sput
 
 This keeps planning close to execution: you do not just write down work, you connect it to focus time.
 
-### 3. Run Focus Sessions
+### 4. Run Focus Sessions
 
 <p align="center">
   <img src="docs/assets/screenshot-focus.jpg" alt="Sputnik focus screen" width="820">
@@ -55,7 +76,7 @@ The focus screen connects a Pomodoro-style session to the selected mission and o
 
 The timer is intentionally large and calm so the app can stay open beside your work.
 
-### 4. Keep A Crew Log
+### 5. Keep A Crew Log
 
 <p align="center">
   <img src="docs/assets/screenshot-crew-log.jpg" alt="Sputnik crew log screen" width="820">
@@ -65,7 +86,7 @@ Crew Log is a lightweight notes area for capturing context while the work is sti
 
 Use it for decisions, blockers, end-of-session notes, or quick project logs.
 
-### 5. Review Stats And Telemetry
+### 6. Review Stats And Telemetry
 
 <p align="center">
   <img src="docs/assets/screenshot-stats.jpg" alt="Sputnik stats screen" width="820">
@@ -75,7 +96,7 @@ Stats turns completed work into a readable activity picture. It shows total focu
 
 Use it to review momentum and understand how your planning habits are changing over time.
 
-### 6. Unlock Achievements
+### 7. Unlock Achievements
 
 <p align="center">
   <img src="docs/assets/screenshot-achievements.jpg" alt="Sputnik achievements screen" width="820">
@@ -83,7 +104,7 @@ Use it to review momentum and understand how your planning habits are changing o
 
 Achievements reward real local actions: creating missions, finishing focus sessions, writing logs, completing tasks, and activating the local Pro simulation. Progress is visible even before an achievement is fully unlocked.
 
-### 7. Grow Laika
+### 8. Grow Laika
 
 <p align="center">
   <img src="docs/assets/screenshot-companion.jpg" alt="Sputnik companion screen" width="820">
@@ -91,7 +112,7 @@ Achievements reward real local actions: creating missions, finishing focus sessi
 
 Laika is Sputnik's companion system. Completed work grants XP, increases levels, changes mood, and unlocks or equips different skins. The companion screen shows current XP, level progress, mood, and available skins.
 
-### 8. Try Sputnik Pro Simulation
+### 9. Try Sputnik Pro Simulation
 
 <p align="center">
   <img src="docs/assets/screenshot-pro.jpg" alt="Sputnik Pro simulation screen" width="820">
@@ -103,6 +124,7 @@ Sputnik Pro is a local-only simulation. It does not process payments or connect 
 
 | Area | Description |
 | --- | --- |
+| Local Profiles | Create password-protected local profiles with separate data stores |
 | Missions | Create goals, track progress, complete missions, and accumulate focus minutes |
 | Tasks | Break missions into concrete work items and complete them from the mission flow |
 | Focus | Run mission-aware focus sessions and save completed work locally |
@@ -110,6 +132,7 @@ Sputnik Pro is a local-only simulation. It does not process payments or connect 
 | Stats | Review focus totals, weekly activity, streaks, snapshots, and recent activity |
 | Companion | Laika gains XP, levels up, changes mood, and supports unlockable skins |
 | Achievements | Unlock rewards through real app activity |
+| Settings | Tune focus timers and manage the active local profile |
 | Pro Simulation | Local-only premium simulation that unlocks additional companion skins |
 | Offline Storage | All app data is stored locally with SQLite |
 
@@ -184,7 +207,7 @@ The renderer does not access SQLite directly. Desktop and database capabilities 
 
 ## Local Data
 
-Sputnik stores data under Electron's `userData` directory in a local `sputnik/sputnik.sqlite` database.
+Sputnik stores data under Electron's `userData` directory. Account records live in a local `sputnik/accounts.sqlite` database, and each profile gets its own `sputnik/profiles/<profile-id>/sputnik.sqlite` workspace database.
 
 Ignored local files include:
 
@@ -211,7 +234,6 @@ The current project has been checked with:
 npm run build
 npm run dist:mac
 npm audit
-npm run preview
 ```
 
 There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.
@@ -221,3 +243,4 @@ There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` 
 - Sputnik is local and offline-first.
 - Recommended minimum useful window size is around `900x620`.
 - The Pro flow is a local simulation; there are no real payments.
+- macOS may ask for first-launch confirmation because the release is distributed directly from GitHub.
