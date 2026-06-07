@@ -15,6 +15,11 @@ export function setSetting(key, value) {
   return listSettings()
 }
 
+export function deleteSetting(key) {
+  getDb().prepare('DELETE FROM app_settings WHERE key = ?').run(key)
+  return listSettings()
+}
+
 export function activateProPlan() {
   getDb().prepare(`
     UPDATE user_profile

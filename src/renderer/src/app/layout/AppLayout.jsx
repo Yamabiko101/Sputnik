@@ -53,7 +53,9 @@ export function AppLayout({
             <strong>{pet?.name ?? 'Laika'} · {pet?.mood ?? 'ready'}</strong>
           </div>
         </header>
-        {children}
+        <div className="contentArea">
+          {children}
+        </div>
       </main>
     </div>
   )

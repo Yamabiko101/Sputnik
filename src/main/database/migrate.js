@@ -2,6 +2,7 @@ import { getDb } from './connection.js'
 import initialSchemaSql from './migrations/001_v1_orbital_core.sql?raw'
 import missionOsSql from './migrations/002_v2_mission_os.sql?raw'
 import laikaProductSql from './migrations/003_v3_laika_product.sql?raw'
+import kosmoAiSql from './migrations/004_v4_kosmo_ai.sql?raw'
 
 const migrations = [
   {
@@ -15,6 +16,10 @@ const migrations = [
   {
     version: '003_v3_laika_product.sql',
     sql: laikaProductSql
+  },
+  {
+    version: '004_v4_kosmo_ai.sql',
+    sql: kosmoAiSql
   }
 ]
 

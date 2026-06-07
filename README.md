@@ -13,16 +13,16 @@
   <img alt="UI" src="https://img.shields.io/badge/UI-React-F4B95E">
   <img alt="Storage" src="https://img.shields.io/badge/Storage-SQLite-8BAE66">
   <img alt="Offline" src="https://img.shields.io/badge/Offline-First-29231F">
-  <img alt="Release" src="https://img.shields.io/badge/Release-1.0.0-F4B95E">
+  <img alt="Release" src="https://img.shields.io/badge/Release-1.1.0-F4B95E">
   <img alt="macOS" src="https://img.shields.io/badge/macOS-Installer-8BAE66">
 </p>
 
-Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines local profiles, missions, tasks, focus sessions, notes, stats, achievements, settings, and a small companion system into a single desktop app.
+Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines local profiles, missions, tasks, focus sessions, notes, stats, achievements, themes, Kosmo AI, settings, and a small companion system into a single desktop app.
 
 The app is designed around a simple loop:
 
 ```txt
-Log in -> Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> Unlock rewards
+Log in -> Plan a mission -> Ask Kosmo -> Focus -> Log notes -> Review stats -> Unlock rewards
 ```
 
 <p align="center">
@@ -31,7 +31,7 @@ Log in -> Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> U
 
 ## Current Release
 
-Sputnik `1.0.0` is the complete macOS desktop release. This version adds the final local profile system and ships as a downloadable macOS installer.
+Sputnik `1.1.0` is the complete macOS desktop release. This version adds Kosmo AI, unlockable themes, and the final installer-ready product polish.
 
 ## What's New
 
@@ -41,6 +41,8 @@ Sputnik `1.0.0` is the complete macOS desktop release. This version adds the fin
 | Profile login | Return to saved local profiles without mixing mission data |
 | Profile settings | Rename profiles, change passwords, log out, or delete a profile with confirmation |
 | Pixel avatars | Choose animated profile avatars, with a Pro avatar unlocked by the local Pro simulation |
+| Kosmo AI | Optional Gemini-powered mission coach with local chat sessions and Sputnik context |
+| Visual themes | Switch between Orbital Core, Mono Signal, and Vostok Signal themes |
 | Separate local databases | Each profile stores its own missions, tasks, notes, stats, achievements, and companion state |
 | Better activity tracking | Mission, task, and Crew Log edits/deletions now create activity events |
 | Safer timer settings | Focus and break duration settings are validated before saving |
@@ -68,9 +70,21 @@ Sputnik `1.0.0` is the complete macOS desktop release. This version adds the fin
       <sub>Break goals into clear tasks and connect them to focus sessions.</sub>
     </td>
     <td width="50%">
+      <img src="docs/assets/screenshot-kosmo.jpg" alt="Sputnik Kosmo AI screen">
+      <strong>Kosmo AI</strong><br>
+      <sub>Ask for mission breakdowns, study prompts, and next-step planning.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshot-companion.jpg" alt="Sputnik companion screen">
+      <strong>Laika companion</strong><br>
+      <sub>Earn XP, unlock moods, and equip visual rewards through real progress.</sub>
+    </td>
+    <td width="50%">
       <img src="docs/assets/screenshot-settings.jpg" alt="Sputnik settings screen">
       <strong>Profile and settings</strong><br>
-      <sub>Tune timer defaults, manage your profile, and choose pixel avatars.</sub>
+      <sub>Tune timers, manage your profile, save a local API key, and choose themes.</sub>
     </td>
   </tr>
 </table>
@@ -151,21 +165,29 @@ Achievements reward real local actions: creating missions, finishing focus sessi
 
 Laika is Sputnik's companion system. Completed work grants XP, increases levels, changes mood, and unlocks or equips different skins. The companion screen shows current XP, level progress, mood, and available skins.
 
-### 9. Try Sputnik Pro Simulation
+### 9. Ask Kosmo AI
+
+<p align="center">
+  <img src="docs/assets/screenshot-kosmo.jpg" alt="Sputnik Kosmo AI screen" width="820">
+</p>
+
+Kosmo AI is an optional mission coach powered by Gemini. It can use your local Sputnik context to help break down missions, plan focus sessions, quiz Crew Log notes, and explain ideas step by step. Chat sessions are stored locally, and the API key can be saved securely from Settings when available.
+
+### 10. Try Sputnik Pro Simulation
 
 <p align="center">
   <img src="docs/assets/screenshot-pro.jpg" alt="Sputnik Pro simulation screen" width="820">
 </p>
 
-Sputnik Pro is a local-only simulation. It does not process payments or connect to a real billing service. In the app, it demonstrates how premium companion skins and a Pro achievement could unlock while staying fully offline.
+Sputnik Pro is a local-only simulation. It does not process payments or connect to a real billing service. In the app, it demonstrates how premium companion skins, premium themes, unlimited Kosmo AI usage, and a Pro achievement could unlock.
 
-### 10. Manage Settings And Profile
+### 11. Manage Settings, Themes, And Profile
 
 <p align="center">
   <img src="docs/assets/screenshot-settings.jpg" alt="Sputnik settings and profile screen" width="820">
 </p>
 
-Settings lets you tune focus, short break, and long break durations. It also lets you rename the active profile, change the local password, log out, delete the profile, and choose available pixel avatars.
+Settings lets you tune focus, short break, and long break durations. It also lets you rename the active profile, change the local password, log out, delete the profile, choose available pixel avatars, switch themes, and configure the optional Kosmo AI API key.
 
 ## What Sputnik Includes
 
@@ -179,8 +201,10 @@ Settings lets you tune focus, short break, and long break durations. It also let
 | Stats | Review focus totals, weekly activity, streaks, snapshots, and recent activity |
 | Companion | Laika gains XP, levels up, changes mood, and supports unlockable skins |
 | Achievements | Unlock rewards through real app activity |
-| Settings | Tune focus timers and manage the active local profile |
-| Pro Simulation | Local-only premium simulation that unlocks additional companion skins |
+| Kosmo AI | Optional Gemini-powered mentor with local chat history and daily Free usage limits |
+| Themes | Orbital Core, Mono Signal, and Vostok Signal visual modes |
+| Settings | Tune focus timers, configure Kosmo AI, and manage the active local profile |
+| Pro Simulation | Local-only premium simulation that unlocks additional companion skins, themes, and unlimited Kosmo AI |
 | Offline Storage | All app data is stored locally with SQLite |
 
 ## Download And Install
@@ -231,6 +255,17 @@ npm install
 npm run dev
 ```
 
+## Optional Kosmo AI Setup
+
+Kosmo AI is optional. The rest of Sputnik works fully offline without an API key.
+
+To enable Kosmo AI, either:
+
+- Open Sputnik Settings and save a Gemini API key in the Kosmo AI panel.
+- Or set `GEMINI_API_KEY` in your local shell before launching the app.
+
+Saved keys use Electron secure storage when it is available on the device. `.env.local` is ignored by git.
+
 ## Commands
 
 | Command | Purpose |
@@ -254,7 +289,7 @@ The renderer does not access SQLite directly. Desktop and database capabilities 
 
 ## Local Data
 
-Sputnik stores data under Electron's `userData` directory. Account records live in a local `sputnik/accounts.sqlite` database, and each profile gets its own `sputnik/profiles/<profile-id>/sputnik.sqlite` workspace database.
+Sputnik stores data under Electron's `userData` directory. Account records live in a local `sputnik/accounts.sqlite` database, and each profile gets its own `sputnik/profiles/<profile-id>/sputnik.sqlite` workspace database. Kosmo AI chat sessions and usage metadata are stored in the active profile database.
 
 Ignored local files include:
 
@@ -262,6 +297,7 @@ Ignored local files include:
 - `out/`
 - `dist/`
 - `release/`
+- `.env.local`
 - SQLite database files
 
 ## Tech Stack

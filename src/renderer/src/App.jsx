@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   BarChart3,
+  Bot,
   Check,
   ClipboardList,
   Crown,
@@ -11,13 +12,16 @@ import {
   Lock,
   Minus,
   NotebookText,
+  Palette,
   PawPrint,
   Play,
   Plus,
   RefreshCw,
   Save,
+  Send,
   Settings,
   Shield,
+  Sparkles,
   TimerReset,
   Trash2,
   Trophy,
@@ -39,9 +43,38 @@ const navItems = [
   { id: 'stats', label: 'Stats', icon: BarChart3 },
   { id: 'achievements', label: 'Achievements', icon: Trophy },
   { id: 'companion', label: 'Companion', icon: PawPrint },
+  { id: 'mentor', label: 'Kosmo AI', icon: Bot },
   { id: 'pro', label: 'Sputnik Pro', icon: Crown },
   { id: 'settings', label: 'Settings', icon: Settings }
 ]
+
+const APP_THEMES = [
+  {
+    key: 'orbital-core',
+    name: 'Orbital Core',
+    description: 'The original warm Sputnik command center.',
+    isPremium: false,
+    swatches: ['#12100e', '#1d1916', '#c83a32', '#f4b95e']
+  },
+  {
+    key: 'mono-signal',
+    name: 'Mono Signal',
+    description: 'Pure black-and-white command mode with low-glare contrast.',
+    isPremium: true,
+    swatches: ['#050505', '#141414', '#f7f7f4', '#8f8f8a']
+  },
+  {
+    key: 'redline-orbit',
+    name: 'Vostok Signal',
+    description: 'Cute Soviet cyberpunk with cozy red panels, mint glow, and warm little console lights.',
+    isPremium: true,
+    swatches: ['#17090f', '#34202a', '#ff6b68', '#9fffe7']
+  }
+]
+
+function getThemeKey(themeKey) {
+  return APP_THEMES.some((theme) => theme.key === themeKey) ? themeKey : 'orbital-core'
+}
 
 export function App() {
   const [authReady, setAuthReady] = useState(false)
@@ -143,6 +176,10 @@ export function App() {
       }
     })
   }, [settings.focus_minutes])
+
+  useEffect(() => {
+    document.body.dataset.theme = getThemeKey(settings.app_theme)
+  }, [settings.app_theme])
 
   useEffect(() => {
     if (focusTimer.status !== 'running') return undefined
@@ -399,10 +436,12 @@ export function App() {
           onSelectSkin={(id) => runAction(() => api.pets.selectSkin(id), 'Laika skin selected.')}
         />
       )}
+      {view === 'mentor' && <KosmoAI />}
       {view === 'pro' && (
         <ProSimulation
           profile={profile}
           skins={skins}
+          themes={APP_THEMES}
           onActivate={() =>
             runAction(async () => {
               await api.pro.activateSimulation()
@@ -414,6 +453,7 @@ export function App() {
       {view === 'settings' && (
         <SettingsPanel
           settings={settings}
+          themes={APP_THEMES}
           profile={currentProfile}
           onSaveSetting={(key, value) =>
             runAction(() => api.settings.set(key, value), 'Settings saved.')
@@ -1330,9 +1370,286 @@ function Companion({ pet, skins, onSelectSkin }) {
   )
 }
 
-function ProSimulation({ profile, skins, onActivate }) {
+function renderInlineMarkdown(text) {
+  return String(text).split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
+function KosmoMarkdown({ children }) {
+  const blocks = String(children ?? '').split(/\n{2,}/)
+  return (
+    <div className="kosmoMarkdown">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n').filter(Boolean)
+        const bulletLines = lines.filter((line) => /^[-*]\s+/.test(line.trim()))
+
+        if (bulletLines.length === lines.length && lines.length > 0) {
+          return (
+            <ul key={blockIndex}>
+              {lines.map((line, lineIndex) => (
+                <li key={lineIndex}>{renderInlineMarkdown(line.trim().replace(/^[-*]\s+/, ''))}</li>
+              ))}
+            </ul>
+          )
+        }
+
+        return (
+          <p key={blockIndex}>
+            {lines.map((line, lineIndex) => (
+              <span key={lineIndex}>
+                {renderInlineMarkdown(line)}
+                {lineIndex < lines.length - 1 && <br />}
+              </span>
+            ))}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
+function KosmoAI() {
+  const starterPrompts = [
+    'Break down my current mission',
+    'Quiz me from my Crew Log',
+    'Plan my next focus session'
+  ]
+  const [status, setStatus] = useState({ configured: false, source: null, encryptionAvailable: false })
+  const [sessions, setSessions] = useState([])
+  const [activeSessionId, setActiveSessionId] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [draft, setDraft] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function loadKosmo() {
+    try {
+      const [nextStatus, nextSessions] = await Promise.all([
+        api.mentor.getStatus(),
+        api.mentor.listSessions()
+      ])
+      setStatus(nextStatus)
+      setSessions(nextSessions)
+      if (!activeSessionId && nextSessions[0]) {
+        const saved = await api.mentor.getSession(nextSessions[0].id)
+        setActiveSessionId(saved.session.id)
+        setMessages(saved.messages)
+      }
+    } catch (loadError) {
+      setError(loadError.message)
+    }
+  }
+
+  useEffect(() => {
+    loadKosmo()
+  }, [])
+
+  async function openSession(id) {
+    setError('')
+    try {
+      const saved = await api.mentor.getSession(id)
+      setActiveSessionId(saved.session.id)
+      setMessages(saved.messages)
+      if (saved.usage) setStatus((current) => ({ ...current, usage: saved.usage }))
+    } catch (openError) {
+      setError(openError.message)
+    }
+  }
+
+  async function startNewSession() {
+    setError('')
+    try {
+      const created = await api.mentor.createSession({ title: 'New Kosmo session' })
+      setActiveSessionId(created.session.id)
+      setMessages(created.messages)
+      setSessions(await api.mentor.listSessions())
+    } catch (createError) {
+      setError(createError.message)
+    }
+  }
+
+  async function deleteActiveSession() {
+    if (!activeSessionId) return
+    setError('')
+    try {
+      const nextSessions = await api.mentor.deleteSession(activeSessionId)
+      setSessions(nextSessions)
+      if (nextSessions[0]) {
+        await openSession(nextSessions[0].id)
+      } else {
+        setActiveSessionId(null)
+        setMessages([])
+      }
+    } catch (deleteError) {
+      setError(deleteError.message)
+    }
+  }
+
+  async function sendText(text) {
+    const content = text.trim()
+    if (!content || busy) return
+
+    const nextMessages = [...messages, { role: 'user', content }]
+    setMessages(nextMessages)
+    setDraft('')
+    setBusy(true)
+    setError('')
+
+    try {
+      const result = await api.mentor.sendMessage({ sessionId: activeSessionId, content })
+      setActiveSessionId(result.session.id)
+      setMessages(result.messages)
+      setStatus((current) => ({ ...current, usage: result.usage }))
+      setSessions(await api.mentor.listSessions())
+    } catch (sendError) {
+      setError(sendError.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const configuredLabel = status.configured
+    ? 'Kosmo AI ready'
+    : 'Kosmo AI is offline on this device'
+  const usage = status.usage ?? { plan: 'free', limit: 10, used: 0, remaining: 10 }
+  const limitReached = usage.limit !== null && usage.remaining <= 0
+  const canSend = status.configured && !busy && !limitReached
+
+  return (
+    <section className="screen kosmoScreen">
+      <div className="screenHeader">
+        <div>
+          <span className="stamp">КОСМО</span>
+          <h1>Kosmo AI</h1>
+          <p>
+            {configuredLabel}
+            {' · '}
+            {usage.limit === null ? 'Pro unlimited' : `${usage.remaining} free messages left today`}
+          </p>
+        </div>
+        <div className="actions">
+          <button className="secondaryButton" onClick={startNewSession} type="button">
+            <Plus size={18} /> New Chat
+          </button>
+          <button className="secondaryButton" disabled={!activeSessionId} onClick={deleteActiveSession} type="button">
+            <Trash2 size={18} /> Delete
+          </button>
+        </div>
+      </div>
+
+      <div className="kosmoGrid">
+        <section className="panel kosmoChatPanel">
+          <div className="kosmoMessages" aria-live="polite">
+            {messages.length === 0 ? (
+              <div className="emptyState">
+                <strong>Kosmo AI is standing by.</strong>
+                <p>Pick a starter or send your own signal.</p>
+              </div>
+            ) : (
+              messages.map((item, index) => (
+                <article className={`kosmoBubble ${item.role}`} key={`${item.role}-${index}`}>
+                  <strong>{item.role === 'assistant' ? 'Kosmo AI' : 'You'}</strong>
+                  <KosmoMarkdown>{item.content}</KosmoMarkdown>
+                </article>
+              ))
+            )}
+            {busy && (
+              <article className="kosmoBubble assistant">
+                <strong>Kosmo AI</strong>
+                <KosmoMarkdown>Thinking...</KosmoMarkdown>
+              </article>
+            )}
+          </div>
+
+          <div className="kosmoStarters">
+            {starterPrompts.map((prompt) => (
+              <button
+                className="iconTextButton"
+                disabled={!canSend}
+                key={prompt}
+                onClick={() => sendText(prompt)}
+                type="button"
+              >
+                <Sparkles size={16} /> {prompt}
+              </button>
+            ))}
+          </div>
+
+          <form
+            className="kosmoComposer"
+            onSubmit={(event) => {
+              event.preventDefault()
+              sendText(draft)
+            }}
+          >
+            <textarea
+              disabled={!canSend}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={limitReached ? 'Free limit reached for today' : 'Ask Kosmo AI...'}
+              value={draft}
+            />
+            <button className="primaryButton" disabled={!canSend || !draft.trim()}>
+              <Send size={18} /> Send
+            </button>
+          </form>
+          {error && <pre className="kosmoError">{error}</pre>}
+        </section>
+
+        <section className="panel kosmoSessionsPanel">
+          <PanelTitle icon={Bot} title="Sessions" />
+          <p>{usage.limit === null ? 'Sputnik Pro removes daily chat limits.' : `${usage.used} / ${usage.limit} messages used today.`}</p>
+          <div className="kosmoSessionList">
+            {sessions.length === 0 ? (
+              <div className="emptyState">
+                <strong>No saved chats yet.</strong>
+                <p>Your next message starts one.</p>
+              </div>
+            ) : (
+              sessions.map((session) => (
+                <button
+                  className={`kosmoSessionButton ${activeSessionId === session.id ? 'active' : ''}`}
+                  key={session.id}
+                  onClick={() => openSession(session.id)}
+                  type="button"
+                >
+                  <strong>{session.title}</strong>
+                  <small>{session.messageCount} messages</small>
+                </button>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function ProSimulation({ profile, skins, themes, onActivate }) {
   const isPro = profile?.current_plan === 'pro'
   const premiumSkins = skins.filter((skin) => skin.is_premium)
+  const premiumThemes = themes.filter((theme) => theme.isPremium)
+  const proBenefits = [
+    {
+      title: 'Unlimited Kosmo AI',
+      body: 'Remove the daily Free message limit for planning, studying, and mission coaching.'
+    },
+    {
+      title: 'Premium Laika skins',
+      body: 'Unlock the premium companion looks and keep them available in Companion.'
+    },
+    {
+      title: 'Premium workspace themes',
+      body: 'Unlock alternate command-center looks for focus, planning, and companion screens.'
+    },
+    {
+      title: 'Pro achievement',
+      body: 'Mark the profile as a Sputnik Pro simulation workspace.'
+    }
+  ]
 
   return (
     <section className="screen">
@@ -1340,11 +1657,20 @@ function ProSimulation({ profile, skins, onActivate }) {
         <div>
           <span className="stamp">ГОТОВО</span>
           <h1>Sputnik Pro</h1>
-          <p>Offline simulation only. It unlocks premium Laika skins and a Pro achievement.</p>
+          <p>Offline simulation only. It unlocks premium Laika skins, Kosmo AI unlimited, and a Pro achievement.</p>
         </div>
         <button className="primaryButton" disabled={isPro} onClick={onActivate}>
           <Crown size={18} /> {isPro ? 'Simulation Active' : 'Activate Simulation'}
         </button>
+      </div>
+      <div className="cardGrid proBenefitGrid">
+        {proBenefits.map((benefit) => (
+          <article className="missionCard" key={benefit.title}>
+            <span className="stamp">PRO</span>
+            <h3>{benefit.title}</h3>
+            <p>{benefit.body}</p>
+          </article>
+        ))}
       </div>
       <div className="cardGrid">
         {premiumSkins.map((skin) => (
@@ -1355,12 +1681,22 @@ function ProSimulation({ profile, skins, onActivate }) {
           </article>
         ))}
       </div>
+      <div className="cardGrid proThemeGrid">
+        {premiumThemes.map((theme) => (
+          <article className="missionCard themeCard" key={theme.key}>
+            <ThemeSwatches swatches={theme.swatches} />
+            <h3>{theme.name}</h3>
+            <p>{isPro ? 'Available in Settings.' : 'Locked until Sputnik Pro simulation is active.'}</p>
+          </article>
+        ))}
+      </div>
     </section>
   )
 }
 
 function SettingsPanel({
   settings,
+  themes,
   profile,
   onSaveSetting,
   onUpdateProfile,
@@ -1377,6 +1713,11 @@ function SettingsPanel({
   const [nextPassword, setNextPassword] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [mentorStatus, setMentorStatus] = useState({ configured: false, source: null, encryptionAvailable: true })
+  const [showApiKeyForm, setShowApiKeyForm] = useState(false)
+  const [geminiApiKey, setGeminiApiKey] = useState('')
+  const [mentorSaving, setMentorSaving] = useState(false)
+  const [mentorMessage, setMentorMessage] = useState('')
 
   useEffect(() => {
     setFocusMinutes(String(settings.focus_minutes ?? 25))
@@ -1389,11 +1730,57 @@ function SettingsPanel({
     setAvatarKey(profile?.avatar_key ?? 'orbital-satellite')
   }, [profile?.display_name, profile?.avatar_key])
 
+  useEffect(() => {
+    async function loadMentorStatus() {
+      try {
+        setMentorStatus(await api.mentor.getStatus())
+      } catch (error) {
+        setMentorMessage(error.message)
+      }
+    }
+
+    loadMentorStatus()
+  }, [])
+
+  async function saveGeminiKey() {
+    setMentorSaving(true)
+    setMentorMessage('')
+    try {
+      setMentorStatus(await api.mentor.saveApiKey(geminiApiKey))
+      setGeminiApiKey('')
+      setShowApiKeyForm(false)
+      setMentorMessage('API key saved.')
+    } catch (error) {
+      setMentorMessage(error.message)
+    } finally {
+      setMentorSaving(false)
+    }
+  }
+
+  async function clearGeminiKey() {
+    setMentorSaving(true)
+    setMentorMessage('')
+    try {
+      setMentorStatus(await api.mentor.clearApiKey())
+      setMentorMessage('Saved API key deleted.')
+    } catch (error) {
+      setMentorMessage(error.message)
+    } finally {
+      setMentorSaving(false)
+    }
+  }
+
   const focusValid = isValidMinuteValue(focusMinutes, 1, 120)
   const shortValid = isValidMinuteValue(shortBreakMinutes, 1, 30)
   const longValid = isValidMinuteValue(longBreakMinutes, 1, 60)
   const settingsValid = focusValid && shortValid && longValid
   const isPro = profile?.current_plan === 'pro'
+  const selectedThemeKey = getThemeKey(settings.app_theme)
+  const mentorStatusLabel = mentorStatus.configured
+    ? mentorStatus.source === 'saved'
+      ? 'API key saved'
+      : 'API key ready'
+    : 'No API key configured'
 
   return (
     <section className="screen">
@@ -1509,6 +1896,87 @@ function SettingsPanel({
         </section>
 
         <section className="panel settingsPanel">
+          <PanelTitle icon={Palette} title="Theme" />
+          <div className="themeChoiceGrid">
+            {themes.map((theme) => {
+              const locked = theme.isPremium && !isPro
+              return (
+                <button
+                  className={`themeChoice ${selectedThemeKey === theme.key ? 'selected' : ''}`}
+                  disabled={locked}
+                  key={theme.key}
+                  onClick={() => onSaveSetting('app_theme', theme.key)}
+                  type="button"
+                >
+                  <ThemeSwatches swatches={theme.swatches} />
+                  <strong>{theme.name}</strong>
+                  <span>{theme.description}</span>
+                  <small>{locked ? 'Requires Sputnik Pro' : theme.isPremium ? 'Sputnik Pro' : 'Free'}</small>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="panel settingsPanel">
+          <PanelTitle icon={Bot} title="Kosmo AI" />
+          <p>{mentorStatusLabel}</p>
+          {showApiKeyForm && (
+            <>
+              <label>
+                API key
+                <input
+                  autoComplete="off"
+                  onChange={(event) => setGeminiApiKey(event.target.value)}
+                  placeholder="Paste API key"
+                  type="password"
+                  value={geminiApiKey}
+                />
+              </label>
+              <div className="actions">
+                <button
+                  className="primaryButton"
+                  disabled={!geminiApiKey.trim() || mentorSaving}
+                  onClick={saveGeminiKey}
+                  type="button"
+                >
+                  <Save size={18} /> Save Key
+                </button>
+                <button
+                  className="secondaryButton"
+                  onClick={() => {
+                    setShowApiKeyForm(false)
+                    setGeminiApiKey('')
+                  }}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+          {!showApiKeyForm && mentorStatus.source !== 'saved' && (
+            <button className="secondaryButton" onClick={() => setShowApiKeyForm(true)} type="button">
+              <Plus size={18} /> Add API Key
+            </button>
+          )}
+          {!showApiKeyForm && mentorStatus.source === 'saved' && (
+            <button
+              className="secondaryButton"
+              disabled={mentorSaving}
+              onClick={clearGeminiKey}
+              type="button"
+            >
+              <Trash2 size={18} /> Delete API Key
+            </button>
+          )}
+          {!mentorStatus.encryptionAvailable && (
+            <p>Secure local key storage is unavailable on this device.</p>
+          )}
+          {mentorMessage && <pre>{mentorMessage}</pre>}
+        </section>
+
+        <section className="panel settingsPanel">
           <PanelTitle icon={Database} title="Data" />
           <p>Close the current profile and return to login. Your local data stays saved.</p>
           <button className="secondaryButton" type="button" onClick={onLogout}>
@@ -1552,6 +2020,16 @@ function PanelTitle({ icon: Icon, title }) {
       <Icon size={18} />
       <h2>{title}</h2>
     </div>
+  )
+}
+
+function ThemeSwatches({ swatches }) {
+  return (
+    <span className="themeSwatches" aria-hidden="true">
+      {swatches.map((swatch) => (
+        <span key={swatch} style={{ background: swatch }} />
+      ))}
+    </span>
   )
 }
 

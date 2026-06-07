@@ -46,6 +46,16 @@ import {
   getSettings,
   setSettingService
 } from '../services/settings.service.js'
+import {
+  clearMentorApiKeyService,
+  createMentorSessionService,
+  deleteMentorSessionService,
+  getMentorStatusService,
+  getMentorSessionService,
+  listMentorSessionsService,
+  saveMentorApiKeyService,
+  sendMentorMessageService
+} from '../services/mentor.service.js'
 import { getAchievements } from '../services/achievement.service.js'
 import { getRecentActivity } from '../services/activity.service.js'
 
@@ -93,6 +103,14 @@ export function registerIpcHandlers() {
   handle('achievements:getAll', () => getAchievements())
   handle('settings:getAll', () => getSettings())
   handle('settings:set', ({ key, value }) => setSettingService(key, value))
+  handle('mentor:getStatus', () => getMentorStatusService())
+  handle('mentor:listSessions', () => listMentorSessionsService())
+  handle('mentor:createSession', (data) => createMentorSessionService(data))
+  handle('mentor:getSession', (id) => getMentorSessionService(id))
+  handle('mentor:deleteSession', (id) => deleteMentorSessionService(id))
+  handle('mentor:saveApiKey', (data) => saveMentorApiKeyService(data))
+  handle('mentor:clearApiKey', () => clearMentorApiKeyService())
+  handle('mentor:sendMessage', (data) => sendMentorMessageService(data))
   handle('pro:getProfile', () => getUserProfileService())
   handle('pro:activateSimulation', () => activateProSimulationService())
 }

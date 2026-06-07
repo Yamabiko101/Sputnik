@@ -57,6 +57,16 @@ contextBridge.exposeInMainWorld('sputnik', {
     getAll: () => invoke('settings:getAll'),
     set: (key, value) => invoke('settings:set', { key, value })
   },
+  mentor: {
+    getStatus: () => invoke('mentor:getStatus'),
+    listSessions: () => invoke('mentor:listSessions'),
+    createSession: (data) => invoke('mentor:createSession', data),
+    getSession: (id) => invoke('mentor:getSession', id),
+    deleteSession: (id) => invoke('mentor:deleteSession', id),
+    saveApiKey: (apiKey) => invoke('mentor:saveApiKey', { apiKey }),
+    clearApiKey: () => invoke('mentor:clearApiKey'),
+    sendMessage: (data) => invoke('mentor:sendMessage', data)
+  },
   pro: {
     getProfile: () => invoke('pro:getProfile'),
     activateSimulation: () => invoke('pro:activateSimulation')
