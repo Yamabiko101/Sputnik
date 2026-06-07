@@ -13,6 +13,8 @@
   <img alt="UI" src="https://img.shields.io/badge/UI-React-F4B95E">
   <img alt="Storage" src="https://img.shields.io/badge/Storage-SQLite-8BAE66">
   <img alt="Offline" src="https://img.shields.io/badge/Offline-First-29231F">
+  <img alt="Release" src="https://img.shields.io/badge/Release-1.0.0-F4B95E">
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-Installer-8BAE66">
 </p>
 
 Sputnik is a cozy mission-control productivity app for people who want a local, focused workspace instead of another cloud dashboard. It combines local profiles, missions, tasks, focus sessions, notes, stats, achievements, settings, and a small companion system into a single desktop app.
@@ -22,6 +24,10 @@ The app is designed around a simple loop:
 ```txt
 Log in -> Plan a mission -> Add tasks -> Focus -> Log notes -> Review stats -> Unlock rewards
 ```
+
+<p align="center">
+  <img src="docs/assets/screenshot-dashboard.jpg" alt="Sputnik dashboard preview" width="900">
+</p>
 
 ## Current Release
 
@@ -40,9 +46,42 @@ Sputnik `1.0.0` is the complete macOS desktop release. This version adds the fin
 | Safer timer settings | Focus and break duration settings are validated before saving |
 | macOS installer | Download the `.dmg`, drag Sputnik into Applications, and run it locally |
 
+## Visual Tour
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshot-auth.jpg" alt="Sputnik local profile screen">
+      <strong>Local profile gate</strong><br>
+      <sub>Create a password-protected workspace before entering Mission OS.</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/screenshot-dashboard.jpg" alt="Sputnik dashboard screen">
+      <strong>Mission dashboard</strong><br>
+      <sub>See active missions, focus totals, streaks, and the activity timeline.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshot-missions.jpg" alt="Sputnik missions screen">
+      <strong>Missions and tasks</strong><br>
+      <sub>Break goals into clear tasks and connect them to focus sessions.</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/screenshot-settings.jpg" alt="Sputnik settings screen">
+      <strong>Profile and settings</strong><br>
+      <sub>Tune timer defaults, manage your profile, and choose pixel avatars.</sub>
+    </td>
+  </tr>
+</table>
+
 ## Product Flow
 
 ### 1. Create Or Open A Profile
+
+<p align="center">
+  <img src="docs/assets/screenshot-auth.jpg" alt="Sputnik profile login screen" width="820">
+</p>
 
 Sputnik starts with a local profile gate. Create a profile with a name and password, or log back into an existing profile. Profiles are stored locally and keep their workspaces separate.
 
@@ -119,6 +158,14 @@ Laika is Sputnik's companion system. Completed work grants XP, increases levels,
 </p>
 
 Sputnik Pro is a local-only simulation. It does not process payments or connect to a real billing service. In the app, it demonstrates how premium companion skins and a Pro achievement could unlock while staying fully offline.
+
+### 10. Manage Settings And Profile
+
+<p align="center">
+  <img src="docs/assets/screenshot-settings.jpg" alt="Sputnik settings and profile screen" width="820">
+</p>
+
+Settings lets you tune focus, short break, and long break durations. It also lets you rename the active profile, change the local password, log out, delete the profile, and choose available pixel avatars.
 
 ## What Sputnik Includes
 

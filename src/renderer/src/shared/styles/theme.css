@@ -313,6 +313,11 @@ button:disabled {
   padding: 12px;
 }
 
+.profilePreview > div {
+  display: grid;
+  gap: 4px;
+}
+
 .loginProfilePreview {
   margin-bottom: 4px;
 }
