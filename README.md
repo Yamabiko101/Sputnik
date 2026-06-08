@@ -13,7 +13,7 @@
   <img alt="UI" src="https://img.shields.io/badge/UI-React-F4B95E">
   <img alt="Storage" src="https://img.shields.io/badge/Storage-SQLite-8BAE66">
   <img alt="Offline" src="https://img.shields.io/badge/Offline-First-29231F">
-  <img alt="Release" src="https://img.shields.io/badge/Release-1.1.0-F4B95E">
+  <img alt="Release" src="https://img.shields.io/badge/Release-1.2.0-F4B95E">
   <img alt="macOS" src="https://img.shields.io/badge/macOS-Installer-8BAE66">
 </p>
 
@@ -31,7 +31,7 @@ Log in -> Plan a mission -> Ask Kosmo -> Focus -> Log notes -> Review stats -> U
 
 ## Current Release
 
-Sputnik `1.1.0` is the complete macOS desktop release. This version adds Kosmo AI, unlockable themes, and the final installer-ready product polish.
+Sputnik `1.2.0` is the current macOS desktop release. This version refreshes the visual system, adds Catppuccin and Gruvbox theme families, improves Crew Log validation, tightens dashboard activity, and ships new macOS installer assets.
 
 ## What's New
 
@@ -42,11 +42,16 @@ Sputnik `1.1.0` is the complete macOS desktop release. This version adds Kosmo A
 | Profile settings | Rename profiles, change passwords, log out, or delete a profile with confirmation |
 | Pixel avatars | Choose animated profile avatars, with a Pro avatar unlocked by the local Pro simulation |
 | Kosmo AI | Optional Gemini-powered mission coach with local chat sessions and Sputnik context |
-| Visual themes | Switch between Orbital Core, Mono Signal, and Vostok Signal themes |
+| Visual themes | Switch between Orbital Core, Catppuccin, Gruvbox, and Gruvbox Light themes |
+| Dashboard timeline | Recent activity stays compact, with a quick toggle for older events |
+| Crew Log validation | Empty log titles are blocked before save and shown with friendlier guidance |
+| Laika polish | Companion animation is calmer on idle surfaces and more expressive while focusing or celebrating |
+| Kosmo settings | API key status is easier to scan from the Settings panel |
+| Fresh screenshots | GitHub documentation images were regenerated from the current renderer |
 | Separate local databases | Each profile stores its own missions, tasks, notes, stats, achievements, and companion state |
 | Better activity tracking | Mission, task, and Crew Log edits/deletions now create activity events |
 | Safer timer settings | Focus and break duration settings are validated before saving |
-| macOS installer | Download the `.dmg`, drag Sputnik into Applications, and run it locally |
+| macOS installer | Download the `1.2.0` `.dmg` or `.zip`, drag Sputnik into Applications, and run it locally |
 
 ## Visual Tour
 
@@ -202,14 +207,14 @@ Settings lets you tune focus, short break, and long break durations. It also let
 | Companion | Laika gains XP, levels up, changes mood, and supports unlockable skins |
 | Achievements | Unlock rewards through real app activity |
 | Kosmo AI | Optional Gemini-powered mentor with local chat history and daily Free usage limits |
-| Themes | Orbital Core, Mono Signal, and Vostok Signal visual modes |
+| Themes | Orbital Core, Catppuccin, Gruvbox, and Gruvbox Light visual modes |
 | Settings | Tune focus timers, configure Kosmo AI, and manage the active local profile |
 | Pro Simulation | Local-only premium simulation that unlocks additional companion skins, themes, and unlimited Kosmo AI |
 | Offline Storage | All app data is stored locally with SQLite |
 
 ## Download And Install
 
-The easiest way to use Sputnik is to download the latest installer from GitHub:
+The easiest way to use Sputnik is to download the latest installer from GitHub. The `1.2.0` release provides macOS arm64 `.dmg` and `.zip` builds:
 
 <p align="center">
   <a href="https://github.com/Yamabiko101/Sputnik/releases/latest">
@@ -316,7 +321,6 @@ The current project has been checked with:
 ```bash
 npm run build
 npm run dist:mac
-npm audit
 ```
 
 There are no dedicated `test`, `lint`, or `typecheck` scripts in `package.json` yet.

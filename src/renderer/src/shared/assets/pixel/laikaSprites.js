@@ -229,10 +229,27 @@ function drawAccessories(grid, skin, mood, frame) {
   pixel(grid, mood === 'focus' ? 15 : 16, 16 + y, accent.scarf)
   pixel(grid, mood === 'focus' ? 14 : 15, 16 + y, 'O')
 
+  if (skin === 'classic') {
+    pixel(grid, 10, 16 + y, 'R')
+    pixel(grid, 14, 16 + y, 'R')
+    pixel(grid, 16, 17 + y, 'R')
+  }
+
+  if (skin === 'cosmonaut') {
+    rect(grid, 10, 17 + y, 4, 2, 'C')
+    pixel(grid, 11, 18 + y, 'D')
+    pixel(grid, 13, 18 + y, 'G')
+    pixel(grid, 6, 7 + y, 'H')
+    pixel(grid, 17, 6 + y, 'H')
+  }
+
   if (skin === 'aurora') {
     pixel(grid, 6, 8 + y, 'A')
     pixel(grid, 18, 9 + y, 'M')
     pixel(grid, 15, 7 + y, 'A')
+    pixel(grid, 7, 16 + y, 'M')
+    pixel(grid, 17, 17 + y, 'A')
+    pixel(grid, 19, 14 + y, 'M')
     if (mood === 'focus') pixel(grid, 12, 5 + y, frame === 0 ? 'A' : 'M')
   }
 
@@ -241,6 +258,9 @@ function drawAccessories(grid, skin, mood, frame) {
     pixel(grid, 11, 5 + y, 'G')
     pixel(grid, 13, 5 + y, 'G')
     pixel(grid, 12, 6 + y, 'G')
+    pixel(grid, 12, 16 + y, 'G')
+    pixel(grid, 11, 17 + y, 'H')
+    pixel(grid, 13, 17 + y, 'H')
     if (mood === 'focus') pixel(grid, 12, 3 + y, frame === 0 ? 'H' : 'G')
   }
 
