@@ -57,23 +57,38 @@ const APP_THEMES = [
     swatches: ['#12100e', '#1d1916', '#c83a32', '#f4b95e']
   },
   {
-    key: 'mono-signal',
-    name: 'Mono Signal',
-    description: 'Pure black-and-white command mode with low-glare contrast.',
+    key: 'catppuccin',
+    name: 'Catppuccin',
+    description: 'A soft pastel command center with lavender, rose, and calm midnight surfaces.',
     isPremium: true,
-    swatches: ['#050505', '#141414', '#f7f7f4', '#8f8f8a']
+    swatches: ['#1e1e2e', '#313244', '#cba6f7', '#f5c2e7']
   },
   {
-    key: 'redline-orbit',
-    name: 'Vostok Signal',
-    description: 'Cute Soviet cyberpunk with cozy red panels, mint glow, and warm little console lights.',
+    key: 'gruvbox',
+    name: 'Gruvbox',
+    description: 'A warm retro terminal theme with earthy panels and classic hacker colors.',
     isPremium: true,
-    swatches: ['#17090f', '#34202a', '#ff6b68', '#9fffe7']
+    swatches: ['#282828', '#3c3836', '#fabd2f', '#b8bb26']
+  },
+  {
+    key: 'gruvbox-light',
+    name: 'Gruvbox Light',
+    description: 'A soft paper-like Gruvbox variant with warm contrast and readable terminal accents.',
+    isPremium: true,
+    swatches: ['#fbf1c7', '#ebdbb2', '#af3a03', '#79740e']
   }
 ]
 
 function getThemeKey(themeKey) {
   return APP_THEMES.some((theme) => theme.key === themeKey) ? themeKey : 'orbital-core'
+}
+
+function getFriendlyErrorMessage(message) {
+  if (!message) return 'Something went wrong. Check the form and try again.'
+  if (message.includes('Note title is required')) return 'Add a log title before saving.'
+  if (message.includes('Mission title is required')) return 'Add a mission title before saving.'
+  if (message.includes('Task title is required')) return 'Add a task title before saving.'
+  return message
 }
 
 export function App() {
@@ -246,7 +261,7 @@ export function App() {
       setProfiles(result.profiles ?? [])
       setMessage('Signed out.')
     } catch (error) {
-      setMessage(error.message)
+      setMessage(getFriendlyErrorMessage(error.message))
     }
   }
 
@@ -317,8 +332,10 @@ export function App() {
       await action()
       await refresh()
       setMessage(successMessage)
+      return true
     } catch (error) {
-      setMessage(error.message)
+      setMessage(getFriendlyErrorMessage(error.message))
+      return false
     }
   }
 
@@ -464,7 +481,7 @@ export function App() {
               applyAuthResult(result)
               setMessage('Profile updated.')
             } catch (error) {
-              setMessage(error.message)
+              setMessage(getFriendlyErrorMessage(error.message))
             }
           }}
           onChangePassword={(data) =>
@@ -478,7 +495,7 @@ export function App() {
               applyAuthResult(result)
               setMessage('Profile deleted.')
             } catch (error) {
-              setMessage(error.message)
+              setMessage(getFriendlyErrorMessage(error.message))
             }
           }}
         />
@@ -662,6 +679,12 @@ function AuthGate({ profiles, onCreateProfile, onLogin, message, onMessage }) {
 }
 
 function Dashboard({ stats, pet, missions, activity, onStartFocus, onNewMission }) {
+  const [showFullTimeline, setShowFullTimeline] = useState(false)
+  const compactTimelineCount = 3
+  const hasMoreActivity = activity.length > compactTimelineCount
+  const visibleActivity = showFullTimeline ? activity : activity.slice(0, compactTimelineCount)
+  const isLaikaCelebrating = pet?.mood === 'celebrating'
+
   return (
     <section className="screen">
       <div className="screenHeader">
@@ -716,11 +739,22 @@ function Dashboard({ stats, pet, missions, activity, onStartFocus, onNewMission 
             {activity.length === 0 ? (
               <EmptyState title="No activity yet" body="Create a mission or complete a focus session to light up the ledger." />
             ) : (
-              <ActivityList events={activity} />
+              <>
+                <ActivityList events={visibleActivity} />
+                {hasMoreActivity && (
+                  <button
+                    className="secondaryButton timelineToggle"
+                    onClick={() => setShowFullTimeline((current) => !current)}
+                    type="button"
+                  >
+                    {showFullTimeline ? 'Show Less' : `Show ${activity.length - compactTimelineCount} More`}
+                  </button>
+                )}
+              </>
             )}
           </section>
           <section className="panel companionPanel">
-            <PetSprite pet={pet} mood={pet?.mood === 'celebrating' ? 'celebrating' : 'idle'} size="dock" />
+            <PetSprite pet={pet} animated={isLaikaCelebrating} mood={isLaikaCelebrating ? 'celebrating' : 'idle'} size="dock" />
             <h2>{pet?.name ?? 'Laika'} is {pet?.mood ?? 'ready'}.</h2>
             <p>Level {pet?.level ?? 1} · {pet?.xp ?? 0} XP · {pet?.skin_name ?? 'Classic Laika'}</p>
           </section>
@@ -1114,7 +1148,7 @@ function Focus({
         </section>
 
         <section className="panel companionPanel">
-          <PetSprite pet={pet} mood={status} size="focus" />
+          <PetSprite pet={pet} animated={status !== 'ready'} mood={status === 'ready' ? 'idle' : status} size="focus" />
           <h2>{status === 'running' ? 'Laika is focusing.' : 'Laika is ready.'}</h2>
           <p>Status: {status}. Completion now grants XP and checks achievements.</p>
         </section>
@@ -1129,6 +1163,7 @@ function CrewLog({ notes, missions, onCreateNote, onUpdateNote, onDeleteNote }) 
   const [missionId, setMissionId] = useState('')
   const [editingNoteId, setEditingNoteId] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [composerError, setComposerError] = useState('')
 
   return (
     <section className="screen">
@@ -1141,14 +1176,30 @@ function CrewLog({ notes, missions, onCreateNote, onUpdateNote, onDeleteNote }) 
       </div>
       <form
         className="noteComposer"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
-          onCreateNote({ title, body, missionId: missionId || null })
-          setTitle('')
-          setBody('')
+          if (!title.trim()) {
+            setComposerError('Add a log title before saving.')
+            return
+          }
+          setComposerError('')
+          const saved = await onCreateNote({ title, body, missionId: missionId || null })
+          if (saved) {
+            setTitle('')
+            setBody('')
+          }
         }}
       >
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Log title" />
+        <input
+          aria-invalid={Boolean(composerError)}
+          value={title}
+          onChange={(event) => {
+            setTitle(event.target.value)
+            if (composerError && event.target.value.trim()) setComposerError('')
+          }}
+          placeholder="Log title"
+        />
+        {composerError && <p className="formHint error">{composerError}</p>}
         <select value={missionId} onChange={(event) => setMissionId(event.target.value)}>
           <option value="">No mission</option>
           {missions.map((mission) => (
@@ -1156,7 +1207,7 @@ function CrewLog({ notes, missions, onCreateNote, onUpdateNote, onDeleteNote }) 
           ))}
         </select>
         <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Write the log entry..." />
-        <button className="primaryButton" type="submit">
+        <button className="primaryButton" disabled={!title.trim()} type="submit">
           <Plus size={18} /> Save Log
         </button>
       </form>
@@ -1215,16 +1266,31 @@ function NoteEditForm({ note, missions, onSave, onCancel }) {
   const [title, setTitle] = useState(note.title)
   const [body, setBody] = useState(note.body)
   const [missionId, setMissionId] = useState(note.mission_id ? String(note.mission_id) : '')
+  const [formError, setFormError] = useState('')
 
   return (
     <form
       className="noteComposer compact"
       onSubmit={(event) => {
         event.preventDefault()
+        if (!title.trim()) {
+          setFormError('Add a log title before saving.')
+          return
+        }
+        setFormError('')
         onSave({ title, body, missionId: missionId || null })
       }}
     >
-      <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Log title" />
+      <input
+        aria-invalid={Boolean(formError)}
+        value={title}
+        onChange={(event) => {
+          setTitle(event.target.value)
+          if (formError && event.target.value.trim()) setFormError('')
+        }}
+        placeholder="Log title"
+      />
+      {formError && <p className="formHint error">{formError}</p>}
       <select value={missionId} onChange={(event) => setMissionId(event.target.value)}>
         <option value="">No mission</option>
         {missions.map((mission) => (
@@ -1735,7 +1801,7 @@ function SettingsPanel({
       try {
         setMentorStatus(await api.mentor.getStatus())
       } catch (error) {
-        setMentorMessage(error.message)
+        setMentorMessage(getFriendlyErrorMessage(error.message))
       }
     }
 
@@ -1751,7 +1817,7 @@ function SettingsPanel({
       setShowApiKeyForm(false)
       setMentorMessage('API key saved.')
     } catch (error) {
-      setMentorMessage(error.message)
+      setMentorMessage(getFriendlyErrorMessage(error.message))
     } finally {
       setMentorSaving(false)
     }
@@ -1764,7 +1830,7 @@ function SettingsPanel({
       setMentorStatus(await api.mentor.clearApiKey())
       setMentorMessage('Saved API key deleted.')
     } catch (error) {
-      setMentorMessage(error.message)
+      setMentorMessage(getFriendlyErrorMessage(error.message))
     } finally {
       setMentorSaving(false)
     }
@@ -1918,9 +1984,14 @@ function SettingsPanel({
           </div>
         </section>
 
-        <section className="panel settingsPanel">
-          <PanelTitle icon={Bot} title="Kosmo AI" />
-          <p>{mentorStatusLabel}</p>
+        <section className="panel settingsPanel kosmoSettingsPanel">
+          <div className="settingsPanelHeader">
+            <PanelTitle icon={Bot} title="Kosmo AI" />
+            <span className={`statusPill ${mentorStatus.configured ? 'ready' : ''}`}>
+              {mentorStatusLabel}
+            </span>
+          </div>
+          <p>Connect a local API key for mission coaching, note review, and study prompts.</p>
           {showApiKeyForm && (
             <>
               <label>

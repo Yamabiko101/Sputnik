@@ -11,19 +11,20 @@ const PIXEL_SIZES = {
   stage: 9
 }
 
-export function PetSprite({ pet, mood = 'idle', size = 'dock', className = '' }) {
+export function PetSprite({ pet, mood = 'idle', size = 'dock', className = '', animated = true }) {
   const skin = pet?.skin_key ?? pet?.skin_palette ?? 'classic'
   const pixelSize = PIXEL_SIZES[size] ?? PIXEL_SIZES.dock
   const spriteSet = useMemo(
     () => getLaikaSpriteSet({ skin, mood }),
     [skin, mood]
   )
+  const frames = animated ? spriteSet.frames : spriteSet.frames.slice(0, 1)
 
   return (
     <PixelSprite
       className={`petSprite petSprite-${size} petSprite-${spriteSet.mood} ${className}`.trim()}
       frameDuration={spriteSet.frameDuration}
-      frames={spriteSet.frames}
+      frames={frames}
       palette={LAIKA_PALETTE}
       pixelSize={pixelSize}
       title={`${pet?.name ?? 'Laika'} ${spriteSet.mood}`}
